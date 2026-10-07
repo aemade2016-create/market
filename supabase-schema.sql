@@ -75,8 +75,8 @@ set phone = '01008074308',
     whatsapp = '01008074308',
     updated_at = now()
 where id = 1
-  and phone = '+201000000000'
-  and whatsapp = '201000000000';
+  and phone = '01008074308'
+  and whatsapp = '01008074308';
 
 -- Used by RLS policies. Browser clients cannot edit admin_users directly.
 create or replace function public.is_store_admin()
