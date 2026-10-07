@@ -319,8 +319,18 @@
     add: async function (email) {
       try {
         var result = await requireClient().rpc('admin_manage_user', { target_email: email, make_admin: true });
-        if (result.error) return asError(result.error);
-        cache.admins = (await requireClient().rpc('admin_list_emails')).data || [];
+        if (result.error) {
+          if (/Create this user in Supabase Auth first/i.test(result.error.message || '')) {
+            return { success: false, message: 'الحساب غير موجود في Supabase Auth. اطلب من صاحبه إنشاء حساب بهذا البريد أولًا، ثم أعد إضافته كمشرف.' };
+          }
+          if (/Only store admins/i.test(result.error.message || '')) {
+            return { success: false, message: 'حسابك لا يملك صلاحية إضافة مشرفين.' };
+          }
+          return asError(result.error);
+        }
+        var adminsResult = await requireClient().rpc('admin_list_emails');
+        if (adminsResult.error) return asError(adminsResult.error);
+        cache.admins = adminsResult.data || [];
         return { success: true };
       } catch (error) { return asError(error); }
     },
@@ -328,7 +338,9 @@
       try {
         var result = await requireClient().rpc('admin_manage_user', { target_email: email, make_admin: false });
         if (result.error) return asError(result.error);
-        cache.admins = (await requireClient().rpc('admin_list_emails')).data || [];
+        var adminsResult = await requireClient().rpc('admin_list_emails');
+        if (adminsResult.error) return asError(adminsResult.error);
+        cache.admins = adminsResult.data || [];
         return { success: true };
       } catch (error) { return asError(error); }
     },
