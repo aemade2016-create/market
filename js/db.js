@@ -17,7 +17,6 @@ const DB = (function () {
 
   // ── بيانات افتراضية ───────────────────────────────────────────────
   const DEFAULT_ADMINS = ['aemade2026@gmail.com'];
-  const DEFAULT_ADMIN_PASSWORD = 'admin123';
 
   const DEFAULT_SETTINGS = {
     name:      'سوبر ماركت النجمة',
@@ -270,7 +269,6 @@ const DB = (function () {
     Orders: Orders,
     Session: Session,
     Cart: Cart,
-    DEFAULT_ADMIN_PASSWORD: DEFAULT_ADMIN_PASSWORD,
     ORDER_STATUS_MAP: ORDER_STATUS_MAP,
     statusBadge: function(status) {
       var s = ORDER_STATUS_MAP[status] || ORDER_STATUS_MAP.PENDING;

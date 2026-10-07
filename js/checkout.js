@@ -88,7 +88,7 @@ var Checkout = (function () {
     return String(number || '').replace(/\D/g, '');
   }
 
-  function submitOrder() {
+  async function submitOrder() {
     var name    = document.getElementById('co-name').value.trim();
     var phone   = document.getElementById('co-phone').value.trim();
     var address = document.getElementById('co-address').value.trim();
@@ -118,7 +118,14 @@ var Checkout = (function () {
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري حفظ الطلب...';
 
-    var result = DB.Orders.add({
+    var whatsappWindow = null;
+    try {
+      whatsappWindow = window.open('about:blank', '_blank');
+    } catch (error) {
+      whatsappWindow = null;
+    }
+
+    var result = await DB.Orders.add({
       email: user.email,
       customerName: name,
       phone: phone,
@@ -128,23 +135,25 @@ var Checkout = (function () {
       total: total,
     });
     if (!result.success) {
+      if (whatsappWindow) whatsappWindow.close();
       btn.disabled = false;
       btn.innerHTML = '<i class="fa-brands fa-whatsapp text-xl"></i> تأكيد الطلب وإرساله عبر واتساب';
-      UI.showToast('حدث خطأ أثناء حفظ الطلب.', 'error');
+      errEl.textContent = result.message || 'حدث خطأ أثناء حفظ الطلب.';
+      errEl.classList.remove('hidden');
       return;
     }
 
     // تحديث بيانات العميل
-    if (phone || address) DB.Users.update(user.email, { phone:phone, address:address });
+    if (phone || address) await DB.Users.update(user.email, { phone:phone, address:address });
 
     var order = result.order;
     var waMsg = buildWhatsAppMessage(order, settings);
     var waURL = 'https://wa.me/' + whatsappNumber + '?text=' + encodeURIComponent(waMsg);
-    var whatsappWindow = null;
-
     try {
-      whatsappWindow = window.open(waURL, '_blank');
-      if (whatsappWindow) whatsappWindow.opener = null;
+      if (whatsappWindow) {
+        whatsappWindow.opener = null;
+        whatsappWindow.location.href = waURL;
+      }
     } catch (error) {
       whatsappWindow = null;
     }

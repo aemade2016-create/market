@@ -2,9 +2,20 @@
 // auth-page.js — منطق واجهة صفحة auth.html
 // ════════════════════════════════════════════════════════════════════
 
-document.addEventListener('DOMContentLoaded', function () {
-  DB.init();
-  Auth.redirectIfLoggedIn();
+document.addEventListener('DOMContentLoaded', async function () {
+  var recoveryMode = new URLSearchParams(window.location.hash.replace(/^#/, '')).get('type') === 'recovery';
+  try {
+    await DB.init();
+  } catch (error) {
+    var loginError = document.getElementById('login-error');
+    if (loginError) {
+      loginError.classList.remove('hidden');
+      var errorText = loginError.querySelector('span');
+      if (errorText) errorText.textContent = error.message || 'تعذر الاتصال بقاعدة البيانات.';
+    }
+    return;
+  }
+  if (!recoveryMode) Auth.redirectIfLoggedIn();
 
   // تحميل بيانات المتجر
   var s = DB.Settings.get();
@@ -25,6 +36,18 @@ document.addEventListener('DOMContentLoaded', function () {
       forms[k].classList.toggle('hidden', k !== name);
     });
     clearErrors();
+  }
+
+  if (recoveryMode) {
+    document.querySelector('#form-reset h2').textContent = 'تعيين كلمة مرور جديدة';
+    document.querySelector('#form-reset .text-gray-500.text-sm').textContent = 'اكتب كلمة المرور الجديدة لحسابك';
+    document.getElementById('reset-form').innerHTML =
+      '<div class="space-y-4">' +
+        '<input id="recovery-password" type="password" placeholder="كلمة المرور الجديدة (6 أحرف على الأقل)" class="form-input" autocomplete="new-password"/>' +
+        '<p id="recovery-error" class="hidden text-red-500 text-xs bg-red-50 rounded-lg px-3 py-2"></p>' +
+        '<button type="submit" class="btn-primary"><i class="fa-solid fa-key"></i> حفظ كلمة المرور</button>' +
+      '</div>';
+    showForm('reset');
   }
 
   document.getElementById('go-to-register').addEventListener('click', function () { showForm('register'); });
@@ -85,24 +108,22 @@ document.addEventListener('DOMContentLoaded', function () {
   function clearErrors() { ['login-error','register-error','reset-error'].forEach(hideError); }
 
   // ── تسجيل الدخول ─────────────────────────────────────────────────
-  document.getElementById('login-form').addEventListener('submit', function (e) {
+  document.getElementById('login-form').addEventListener('submit', async function (e) {
     e.preventDefault();
     hideError('login-error');
     var email = document.getElementById('login-email').value.trim();
     var pass  = document.getElementById('login-password').value;
     var btn   = this.querySelector('button[type="submit"]');
     setLoading(btn, true);
-    setTimeout(function () {
-      var r = Auth.login(email, pass);
-      setLoading(btn, false, '<i class="fa-solid fa-right-to-bracket"></i> تسجيل الدخول');
-      if (!r.success) { showError('login-error', r.message); UI.shake(document.getElementById('login-form')); return; }
-      UI.showToast('أهلاً بك' + (r.user.firstName ? '، ' + r.user.firstName : '') + '! ✨', 'success');
-      setTimeout(function () { window.location.href = r.isAdmin ? 'admin.html' : 'index.html'; }, 900);
-    }, 300);
+    var result = await Auth.login(email, pass);
+    setLoading(btn, false, '<i class="fa-solid fa-right-to-bracket"></i> تسجيل الدخول');
+    if (!result.success) { showError('login-error', result.message); UI.shake(document.getElementById('login-form')); return; }
+    UI.showToast('أهلاً بك' + (result.user.firstName ? '، ' + result.user.firstName : '') + '! ✨', 'success');
+    setTimeout(function () { window.location.href = result.isAdmin ? 'admin.html' : 'index.html'; }, 500);
   });
 
   // ── إنشاء حساب ───────────────────────────────────────────────────
-  document.getElementById('register-form').addEventListener('submit', function (e) {
+  document.getElementById('register-form').addEventListener('submit', async function (e) {
     e.preventDefault();
     hideError('register-error');
     var data = {
@@ -114,35 +135,57 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     var btn = this.querySelector('button[type="submit"]');
     setLoading(btn, true);
-    setTimeout(function () {
-      var r = Auth.register(data);
-      setLoading(btn, false, '<i class="fa-solid fa-user-plus"></i> إنشاء الحساب');
-      if (!r.success) { showError('register-error', r.message); UI.shake(document.getElementById('register-form')); return; }
-      UI.showToast('تم إنشاء حسابك بنجاح! يسعدنا انضمامك 🎉', 'success');
-      setTimeout(function () { window.location.href = 'index.html'; }, 900);
-    }, 400);
+    var result = await Auth.register(data);
+    setLoading(btn, false, '<i class="fa-solid fa-user-plus"></i> إنشاء الحساب');
+    if (!result.success) { showError('register-error', result.message); UI.shake(document.getElementById('register-form')); return; }
+    if (result.requiresConfirmation) {
+      UI.showToast(result.message, 'info', 5000);
+      showForm('login');
+      return;
+    }
+    UI.showToast('تم إنشاء حسابك بنجاح! يسعدنا انضمامك 🎉', 'success');
+    setTimeout(function () { window.location.href = 'index.html'; }, 500);
   });
 
   // ── نسيان كلمة المرور ────────────────────────────────────────────
-  document.getElementById('reset-form').addEventListener('submit', function (e) {
+  document.getElementById('reset-form').addEventListener('submit', async function (e) {
     e.preventDefault();
     hideError('reset-error');
+    if (recoveryMode) {
+      var newPassword = document.getElementById('recovery-password').value;
+      var recoveryError = document.getElementById('recovery-error');
+      var recoveryButton = this.querySelector('button[type="submit"]');
+      if (newPassword.length < 6) {
+        recoveryError.textContent = 'يجب أن تكون كلمة المرور 6 أحرف على الأقل.';
+        recoveryError.classList.remove('hidden');
+        return;
+      }
+      setLoading(recoveryButton, true);
+      var passwordResult = await Auth.updatePassword(newPassword);
+      setLoading(recoveryButton, false, '<i class="fa-solid fa-key"></i> حفظ كلمة المرور');
+      if (!passwordResult.success) {
+        recoveryError.textContent = passwordResult.message;
+        recoveryError.classList.remove('hidden');
+        return;
+      }
+      UI.showToast('تم تحديث كلمة المرور بنجاح', 'success');
+      setTimeout(function () { window.location.href = 'index.html'; }, 500);
+      return;
+    }
     var email = document.getElementById('reset-email').value.trim();
     var btn   = this.querySelector('button[type="submit"]');
     setLoading(btn, true);
-    setTimeout(function () {
-      var r = Auth.requestPasswordReset(email);
-      setLoading(btn, false, '<i class="fa-solid fa-paper-plane"></i> إرسال رابط التحقق');
-      if (!r.success) { showError('reset-error', r.message); return; }
-      document.getElementById('reset-form').innerHTML =
-        '<div class="text-center py-4">' +
-          '<div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-envelope-circle-check text-green-600 text-3xl"></i></div>' +
-          '<h3 class="text-lg font-bold text-gray-800 mb-2">تم الإرسال بنجاح!</h3>' +
-          '<p class="text-gray-500 text-sm leading-relaxed">' + r.message + '</p>' +
-          '<button onclick="window.location.reload()" class="mt-5 text-sm text-green-600 hover:text-green-700 font-semibold">العودة لتسجيل الدخول</button>' +
-        '</div>';
-      UI.showToast(r.message, 'success');
-    }, 600);
+    var result = await Auth.requestPasswordReset(email);
+    setLoading(btn, false, '<i class="fa-solid fa-paper-plane"></i> إرسال رابط التحقق');
+    if (!result.success) { showError('reset-error', result.message); return; }
+    document.getElementById('reset-form').innerHTML =
+      '<div class="text-center py-4">' +
+        '<div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-envelope-circle-check text-green-600 text-3xl"></i></div>' +
+        '<h3 class="text-lg font-bold text-gray-800 mb-2">تم الإرسال بنجاح!</h3>' +
+        '<p class="text-gray-500 text-sm leading-relaxed">' + result.message + '</p>' +
+        '<button onclick="window.location.reload()" class="mt-5 text-sm text-green-600 hover:text-green-700 font-semibold">العودة لتسجيل الدخول</button>' +
+      '</div>';
+    UI.showToast(result.message, 'success');
   });
 
   // ── Social Login (محاكاة) ─────────────────────────────────────────

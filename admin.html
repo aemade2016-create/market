@@ -651,14 +651,24 @@
   </div>
 
   <!-- ══════════════════ SCRIPTS ══════════════════ -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabaseClient.js"></script>
   <script src="js/db.js"></script>
+  <script src="js/supabaseData.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/cart.js"></script>
   <script src="js/layout.js"></script>
 
   <script>
-    DB.init();
+    (async function () {
+    try {
+      await DB.init();
+    } catch (error) {
+      console.error('[Admin] Supabase initialization failed:', error);
+      UI.showToast('تعذر تحميل بيانات Supabase: ' + (error.message || 'خطأ غير معروف'), 'error', 5000);
+      return;
+    }
 
     if (Auth.requireAdmin('index.html')) {
 
@@ -921,7 +931,7 @@
         }
       };
 
-      window.saveProduct = function () {
+      window.saveProduct = async function () {
         var name    = document.getElementById('pm-name').value.trim();
         var cat     = document.getElementById('pm-category').value.trim();
         var price   = document.getElementById('pm-price').value.trim();
@@ -949,13 +959,14 @@
           image:    image,
         };
 
-        if (currentEditProductId) {
-          DB.Products.update(currentEditProductId, data);
-          UI.showToast('تم تحديث المنتج بنجاح', 'success');
-        } else {
-          DB.Products.add(data);
-          UI.showToast('تم إضافة المنتج بنجاح', 'success');
+        var result = currentEditProductId
+          ? await DB.Products.update(currentEditProductId, data)
+          : await DB.Products.add(data);
+        if (!result.success) {
+          UI.showToast(result.message || 'تعذر حفظ المنتج', 'error');
+          return;
         }
+        UI.showToast(currentEditProductId ? 'تم تحديث المنتج بنجاح' : 'تم إضافة المنتج بنجاح', 'success');
 
         window.closeProductModal();
         window.renderProductsTable();
@@ -971,8 +982,12 @@
           confirmText: 'حذف',
           cancelText:  'إلغاء',
           type:        'danger',
-          onConfirm:   function () {
-            DB.Products.delete(id);
+          onConfirm:   async function () {
+            var result = await DB.Products.delete(id);
+            if (!result.success) {
+              UI.showToast(result.message || 'تعذر حذف المنتج', 'error');
+              return;
+            }
             window.renderProductsTable();
             populateCategoryFilter();
             UI.showToast('تم حذف المنتج بنجاح', 'success');
@@ -1050,8 +1065,13 @@
         tbody.innerHTML = html;
       };
 
-      window.updateOrderStatus = function (id, status) {
-        DB.Orders.updateStatus(id, status);
+      window.updateOrderStatus = async function (id, status) {
+        var result = await DB.Orders.updateStatus(id, status);
+        if (!result.success) {
+          UI.showToast(result.message || 'تعذر تحديث حالة الطلب', 'error');
+          window.loadAdminOrders();
+          return;
+        }
 
         // Update in-memory array
         for (var i = 0; i < allAdminOrders.length; i++) {
@@ -1203,7 +1223,7 @@
         document.getElementById('settings-logo-preview').src = url;
       };
 
-      window.saveSettings = function () {
+      window.saveSettings = async function () {
         var updates = {
           name:     document.getElementById('settings-name').value.trim(),
           logo:     document.getElementById('settings-logo').value.trim(),
@@ -1219,7 +1239,11 @@
           return;
         }
 
-        DB.Settings.update(updates);
+        var result = await DB.Settings.update(updates);
+        if (!result.success) {
+          UI.showToast(result.message || 'تعذر حفظ الإعدادات', 'error');
+          return;
+        }
         refreshStoreBranding();
         UI.showToast('تم حفظ الإعدادات بنجاح', 'success');
       };
@@ -1259,7 +1283,7 @@
         tbody.innerHTML = html;
       };
 
-      window.addNewAdmin = function () {
+      window.addNewAdmin = async function () {
         var emailInput = document.getElementById('new-admin-email');
         var email = emailInput.value.trim().toLowerCase();
 
@@ -1274,7 +1298,7 @@
           return;
         }
 
-        var result = DB.Admins.add(email);
+        var result = await DB.Admins.add(email);
         if (!result.success) {
           UI.showToast(result.message || 'حدث خطأ', 'error');
           return;
@@ -1297,8 +1321,12 @@
           confirmText: 'حذف',
           cancelText:  'إلغاء',
           type:        'danger',
-          onConfirm:   function () {
-            DB.Admins.remove(email);
+          onConfirm:   async function () {
+            var result = await DB.Admins.remove(email);
+            if (!result.success) {
+              UI.showToast(result.message || 'تعذر حذف المشرف', 'error');
+              return;
+            }
             window.renderAdminsTable();
             UI.showToast('تم حذف المشرف بنجاح', 'success');
           }
@@ -1359,6 +1387,7 @@
       })();
 
     } // end Auth.requireAdmin block
+    })();
   </script>
 
 </body>

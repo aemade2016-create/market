@@ -53,9 +53,6 @@
           </div>
           <button type="submit" class="btn-primary"><i class="fa-solid fa-right-to-bracket"></i> تسجيل الدخول</button>
         </form>
-        <!-- <div class="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-700">
-          <i class="fa-solid fa-shield-halved ml-1"></i> دخول المشرف: admin@aemade2026@gmail.com / admin123
-        </div> -->
         <div class="flex items-center gap-3 my-5"><hr class="flex-1 border-gray-200"/><span class="text-xs text-gray-400">أو تابع بـ</span><hr class="flex-1 border-gray-200"/></div>
         <div class="grid grid-cols-2 gap-3">
           <button onclick="handleSocialLogin('google')" class="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white py-3 text-sm font-medium text-gray-700 hover:bg-gray-50">
@@ -138,7 +135,10 @@
 
   <div id="toast-container" class="fixed top-5 left-5 z-[9999] flex flex-col gap-2 pointer-events-none" aria-live="polite"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabaseClient.js"></script>
   <script src="js/db.js"></script>
+  <script src="js/supabaseData.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/auth-page.js"></script>

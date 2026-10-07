@@ -314,13 +314,23 @@
   <!-- ═══════════════════════════════════════════════════════════════
        SCRIPTS
   ════════════════════════════════════════════════════════════════ -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabaseClient.js"></script>
   <script src="js/db.js"></script>
+  <script src="js/supabaseData.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/cart.js"></script>
   <script src="js/layout.js"></script>
   <script>
-    DB.init();
+    (async function () {
+    try {
+      await DB.init();
+    } catch (error) {
+      console.error('[Profile] Supabase initialization failed:', error);
+      UI.showToast('تعذر تحميل بيانات Supabase: ' + (error.message || 'خطأ غير معروف'), 'error', 5000);
+      return;
+    }
 
     if (Auth.requireAuth('auth.html')) {
 
@@ -568,7 +578,7 @@
         document.getElementById('edit-actions').classList.add('hidden');
       };
 
-      window.savePersonalInfo = function () {
+      window.savePersonalInfo = async function () {
         var firstName = document.getElementById('field-firstName').value.trim();
         var lastName  = document.getElementById('field-lastName').value.trim();
         var phone     = document.getElementById('field-phone').value.trim();
@@ -579,7 +589,7 @@
           return;
         }
 
-        var result = DB.Users.update(currentUser.email, { firstName: firstName, lastName: lastName, phone: phone, address: address });
+        var result = await DB.Users.update(currentUser.email, { firstName: firstName, lastName: lastName, phone: phone, address: address });
         if (!result.success) {
           UI.showToast(result.message || 'حدث خطأ أثناء الحفظ', 'error');
           return;
@@ -634,17 +644,13 @@
       // ══════════════════════════════════════════════════════════════
       // Change password
       // ══════════════════════════════════════════════════════════════
-      window.changePassword = function () {
+      window.changePassword = async function () {
         var currentPwd = document.getElementById('field-current-pwd').value;
         var newPwd     = document.getElementById('field-new-pwd').value;
         var confirmPwd = document.getElementById('field-confirm-pwd').value;
 
         if (!currentPwd || !newPwd || !confirmPwd) {
           UI.showToast('يرجى ملء جميع حقول كلمة المرور', 'error');
-          return;
-        }
-        if (currentPwd !== currentUser.password) {
-          UI.showToast('كلمة المرور الحالية غير صحيحة', 'error');
           return;
         }
         if (newPwd !== confirmPwd) {
@@ -656,14 +662,11 @@
           return;
         }
 
-        var result = DB.Users.update(currentUser.email, { password: newPwd });
+        var result = await Auth.changePassword(currentPwd, newPwd);
         if (!result.success) {
           UI.showToast(result.message || 'حدث خطأ أثناء تغيير كلمة المرور', 'error');
           return;
         }
-
-        currentUser = Object.assign({}, currentUser, { password: newPwd });
-        DB.Session.set(currentUser);
 
         // Clear fields
         document.getElementById('field-current-pwd').value = '';
@@ -730,6 +733,7 @@
       renderOrders();
 
     }
+    })();
   </script>
 
 </body>

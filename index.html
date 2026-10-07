@@ -108,7 +108,10 @@
   </footer>
 
   <!-- Scripts — ترتيب التحميل مهم جداً -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabaseClient.js"></script>
   <script src="js/db.js"></script>
+  <script src="js/supabaseData.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/cart.js"></script>
@@ -116,8 +119,14 @@
   <script src="js/layout.js"></script>
   <script src="js/storefront.js"></script>
   <script>
-    // تهيئة
-    DB.init();
+    (async function () {
+    try {
+      await DB.init();
+    } catch (error) {
+      console.error('[Storefront] Supabase initialization failed:', error);
+      document.getElementById('storefront-container').innerHTML = '<p class="col-span-full py-12 text-center text-red-600">تعذر تحميل المتجر. تحقق من إعداد قاعدة البيانات ثم أعد المحاولة.</p>';
+      return;
+    }
 
     var settings = DB.Settings.get();
 
@@ -170,6 +179,7 @@
       Storefront.renderPills();
       Storefront.render();
     });
+    })();
   </script>
 </body>
 </html>
