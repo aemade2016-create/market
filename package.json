@@ -1,0 +1,8 @@
+{
+  "name": "supermarket-star",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "smoke": "node smoke-check.js"
+  }
+}

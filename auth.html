@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>تسجيل الدخول</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <style>
+    body { font-family:'Tajawal',sans-serif; }
+    .auth-bg { background:linear-gradient(135deg,#064e3b 0%,#065f46 30%,#047857 60%,#059669 100%); background-size:400% 400%; animation:grad 8s ease infinite; }
+    @keyframes grad { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+    .form-input { width:100%; border-radius:.75rem; border:1px solid #e5e7eb; background:#f9fafb; padding:.75rem 1rem; font-size:.875rem; color:#1f2937; outline:none; transition:all .2s; font-family:'Tajawal',sans-serif; }
+    .form-input:focus { border-color:#22c55e; background:#fff; box-shadow:0 0 0 3px rgba(34,197,94,.12); }
+    .btn-primary { width:100%; border-radius:.75rem; background:#16a34a; padding:.875rem; color:#fff; font-weight:700; font-size:1rem; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:.5rem; box-shadow:0 4px 12px rgba(22,163,74,.25); }
+    .btn-primary:hover { background:#15803d; }
+    .btn-primary:active { transform:scale(.97); }
+    .strength-bar { height:4px; border-radius:2px; transition:all .3s; }
+  </style>
+</head>
+<body class="auth-bg min-h-screen flex items-center justify-center p-4">
+
+  <div class="w-full max-w-md">
+    <!-- الشعار -->
+    <div class="text-center mb-6">
+      <img id="header-logo" src="https://img.icons8.com/fluency/96/shopping-cart.png" alt="شعار" class="w-16 h-16 mx-auto drop-shadow-lg"/>
+      <h1 id="header-name" class="mt-2 text-2xl font-extrabold text-white">سوبر ماركت النجمة</h1>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
+
+      <!-- ── Login ── -->
+      <div id="form-login" class="p-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-1">مرحباً بعودتك 👋</h2>
+        <p class="text-gray-500 text-sm mb-7">سجّل دخولك للمتابعة</p>
+        <form id="login-form" novalidate class="space-y-4">
+          <div class="relative">
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-regular fa-envelope fa-sm"></i></span>
+            <input id="login-email" type="email" placeholder="البريد الإلكتروني" class="form-input pr-10" autocomplete="email"/>
+          </div>
+          <div class="relative">
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-solid fa-lock fa-sm"></i></span>
+            <input id="login-password" type="password" placeholder="كلمة المرور" class="form-input pr-10 pl-10" autocomplete="current-password"/>
+            <button type="button" id="toggle-login-pass" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><i class="fa-regular fa-eye fa-sm"></i></button>
+          </div>
+          <p id="login-error" class="hidden text-red-500 text-xs bg-red-50 rounded-lg px-3 py-2 flex items-center gap-1">
+            <i class="fa-solid fa-circle-exclamation"></i><span></span>
+          </p>
+          <div class="text-left">
+            <button type="button" id="go-to-reset" class="text-xs text-green-600 hover:text-green-700 font-medium">نسيت كلمة المرور؟</button>
+          </div>
+          <button type="submit" class="btn-primary"><i class="fa-solid fa-right-to-bracket"></i> تسجيل الدخول</button>
+        </form>
+        <div class="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-700">
+          <i class="fa-solid fa-shield-halved ml-1"></i> دخول المشرف: admin@aemade2026@gmail.com / admin123
+        </div>
+        <div class="flex items-center gap-3 my-5"><hr class="flex-1 border-gray-200"/><span class="text-xs text-gray-400">أو تابع بـ</span><hr class="flex-1 border-gray-200"/></div>
+        <div class="grid grid-cols-2 gap-3">
+          <button onclick="handleSocialLogin('google')" class="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white py-3 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google"/> Google
+          </button>
+          <button onclick="handleSocialLogin('facebook')" class="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white py-3 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <img src="https://www.svgrepo.com/show/448224/facebook.svg" class="w-5 h-5" alt="Facebook"/> Facebook
+          </button>
+        </div>
+        <p class="text-center text-sm text-gray-500 mt-6">ليس لديك حساب؟ <span id="go-to-register" class="text-green-600 font-semibold cursor-pointer hover:text-green-700">إنشاء حساب جديد</span></p>
+      </div>
+
+      <!-- ── Register ── -->
+      <div id="form-register" class="p-8 hidden">
+        <h2 class="text-2xl font-bold text-gray-800 mb-1">إنشاء حساب جديد ✨</h2>
+        <p class="text-gray-500 text-sm mb-7">انضم إلينا وتسوّق بكل سهولة</p>
+        <form id="register-form" novalidate class="space-y-4">
+          <div class="grid grid-cols-2 gap-3">
+            <div class="relative">
+              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-regular fa-user fa-sm"></i></span>
+              <input id="reg-first" type="text" placeholder="الاسم الأول" class="form-input pr-10" autocomplete="given-name"/>
+            </div>
+            <input id="reg-last" type="text" placeholder="الاسم الأخير" class="form-input" autocomplete="family-name"/>
+          </div>
+          <div class="relative">
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-regular fa-envelope fa-sm"></i></span>
+            <input id="reg-email" type="email" placeholder="البريد الإلكتروني" class="form-input pr-10" autocomplete="email"/>
+          </div>
+          <div class="relative">
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-solid fa-lock fa-sm"></i></span>
+            <input id="reg-password" type="password" placeholder="كلمة المرور (6 أحرف على الأقل)" class="form-input pr-10 pl-10" autocomplete="new-password"/>
+            <button type="button" id="toggle-reg-pass" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><i class="fa-regular fa-eye fa-sm"></i></button>
+          </div>
+          <!-- مؤشر القوة -->
+          <div id="strength-container" class="hidden space-y-1">
+            <div class="flex gap-1">
+              <div class="strength-bar flex-1 bg-gray-200" id="s1"></div>
+              <div class="strength-bar flex-1 bg-gray-200" id="s2"></div>
+              <div class="strength-bar flex-1 bg-gray-200" id="s3"></div>
+              <div class="strength-bar flex-1 bg-gray-200" id="s4"></div>
+            </div>
+            <p id="strength-label" class="text-xs text-gray-400"></p>
+          </div>
+          <div class="relative">
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-solid fa-lock-open fa-sm"></i></span>
+            <input id="reg-confirm" type="password" placeholder="تأكيد كلمة المرور" class="form-input pr-10 pl-10" autocomplete="new-password"/>
+            <button type="button" id="toggle-reg-confirm" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><i class="fa-regular fa-eye fa-sm"></i></button>
+          </div>
+          <p id="register-error" class="hidden text-red-500 text-xs bg-red-50 rounded-lg px-3 py-2 flex items-center gap-1">
+            <i class="fa-solid fa-circle-exclamation"></i><span></span>
+          </p>
+          <button type="submit" class="btn-primary"><i class="fa-solid fa-user-plus"></i> إنشاء الحساب</button>
+        </form>
+        <p class="text-center text-sm text-gray-500 mt-6">لديك حساب؟ <span id="go-to-login" class="text-green-600 font-semibold cursor-pointer hover:text-green-700">تسجيل الدخول</span></p>
+      </div>
+
+      <!-- ── Reset ── -->
+      <div id="form-reset" class="p-8 hidden">
+        <button id="back-to-login" class="flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm mb-6"><i class="fa-solid fa-arrow-right"></i> العودة</button>
+        <div class="text-center mb-6">
+          <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3"><i class="fa-solid fa-key text-green-600 text-2xl"></i></div>
+          <h2 class="text-2xl font-bold text-gray-800 mb-1">نسيت كلمة المرور؟</h2>
+          <p class="text-gray-500 text-sm">أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين</p>
+        </div>
+        <form id="reset-form" novalidate class="space-y-4">
+          <div class="relative">
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-regular fa-envelope fa-sm"></i></span>
+            <input id="reset-email" type="email" placeholder="البريد الإلكتروني" class="form-input pr-10" autocomplete="email"/>
+          </div>
+          <p id="reset-error" class="hidden text-red-500 text-xs bg-red-50 rounded-lg px-3 py-2 flex items-center gap-1">
+            <i class="fa-solid fa-circle-exclamation"></i><span></span>
+          </p>
+          <button type="submit" class="btn-primary"><i class="fa-solid fa-paper-plane"></i> إرسال رابط التحقق</button>
+        </form>
+      </div>
+
+    </div><!-- /.card -->
+    <p class="text-center text-white/60 text-xs mt-5">© 2026 جميع الحقوق محفوظة</p>
+  </div>
+
+  <div id="toast-container" class="fixed top-5 left-5 z-[9999] flex flex-col gap-2 pointer-events-none" aria-live="polite"></div>
+
+  <script src="js/db.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/auth-page.js"></script>
+</body>
+</html>

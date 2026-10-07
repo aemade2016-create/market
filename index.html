@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>سوبر ماركت النجمة</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <style>
+    body { font-family:'Tajawal',sans-serif; }
+    .hero-gradient { background: linear-gradient(135deg,#064e3b 0%,#065f46 40%,#0d9488 100%); }
+    .line-clamp-2 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .skeleton { background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%); background-size:200% 100%; animation:sk 1.4s infinite; }
+    @keyframes sk { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    #category-pills { scrollbar-width:none; -ms-overflow-style:none; }
+    #category-pills::-webkit-scrollbar { display:none; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+  <div id="header-placeholder"></div>
+
+  <!-- Hero -->
+  <section class="hero-gradient text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+      <div class="flex flex-col sm:flex-row items-center gap-6">
+        <div class="flex-1 text-center sm:text-right">
+          <p class="text-green-300 text-sm font-semibold mb-2 flex items-center gap-1.5 justify-center sm:justify-start">
+            <i class="fa-solid fa-bolt"></i> عروض اليوم الحصرية
+          </p>
+          <h1 id="hero-store-name" class="text-3xl sm:text-4xl font-extrabold leading-tight mb-3">سوبر ماركت النجمة</h1>
+          <p class="text-green-100 text-base mb-6 max-w-md">أطازج المنتجات بأفضل الأسعار، توصيل سريع لباب بيتك 🚚</p>
+          <div class="flex items-center gap-3 justify-center sm:justify-start">
+            <button onclick="document.getElementById('storefront-container').scrollIntoView({behavior:'smooth'})"
+                    class="flex items-center gap-2 rounded-xl bg-white text-green-700 px-5 py-3 font-bold text-sm hover:bg-green-50 shadow-lg">
+              <i class="fa-solid fa-store"></i> تسوّق الآن
+            </button>
+            <div id="hero-phone-btn"></div>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-3 sm:gap-4">
+          <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center border border-white/20">
+            <p class="text-2xl font-extrabold" id="stats-products">16</p>
+            <p class="text-green-200 text-xs mt-0.5">منتج</p>
+          </div>
+          <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center border border-white/20">
+            <p class="text-2xl font-extrabold" id="stats-categories">6</p>
+            <p class="text-green-200 text-xs mt-0.5">قسم</p>
+          </div>
+          <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center border border-white/20">
+            <p class="text-2xl font-extrabold">🚚</p>
+            <p class="text-green-200 text-xs mt-0.5">توصيل</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Category Pills -->
+  <div class="bg-white border-b border-gray-100 sticky top-16 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <div id="category-pills" class="flex gap-2 py-3 overflow-x-auto">
+        <div class="skeleton h-9 w-20 rounded-full flex-shrink-0"></div>
+        <div class="skeleton h-9 w-28 rounded-full flex-shrink-0"></div>
+        <div class="skeleton h-9 w-24 rounded-full flex-shrink-0"></div>
+        <div class="skeleton h-9 w-32 rounded-full flex-shrink-0"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Products -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div id="storefront-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+      <!-- skeleton يُنشأ بـ JS -->
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-gray-400 mt-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-8">
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <img id="footer-logo" src="https://img.icons8.com/fluency/96/shopping-cart.png" class="w-8 h-8" alt="شعار"/>
+            <span id="footer-name" class="text-white font-bold text-lg">سوبر ماركت النجمة</span>
+          </div>
+          <p class="text-sm leading-relaxed">نقدم أفضل المنتجات الطازجة والمتنوعة بأسعار منافسة مع توصيل سريع.</p>
+        </div>
+        <div>
+          <h4 class="text-white font-bold mb-3">روابط سريعة</h4>
+          <ul class="space-y-2 text-sm">
+            <li><a href="index.html"   class="hover:text-white flex items-center gap-1.5"><i class="fa-solid fa-house fa-xs"></i> الرئيسية</a></li>
+            <li><a href="profile.html" class="hover:text-white flex items-center gap-1.5"><i class="fa-regular fa-user fa-xs"></i> حسابي</a></li>
+            <li><a href="auth.html"    class="hover:text-white flex items-center gap-1.5"><i class="fa-solid fa-right-to-bracket fa-xs"></i> تسجيل الدخول</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-white font-bold mb-3">تواصل معنا</h4>
+          <div id="footer-contact" class="space-y-2 text-sm"></div>
+        </div>
+      </div>
+      <div class="border-t border-gray-700 pt-5 text-center text-xs">
+        <p id="footer-copy">© 2026 سوبر ماركت النجمة — جميع الحقوق محفوظة</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts — ترتيب التحميل مهم جداً -->
+  <script src="js/db.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/checkout.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/storefront.js"></script>
+  <script>
+    // تهيئة
+    DB.init();
+
+    var settings = DB.Settings.get();
+
+    // الهيدر
+    Layout.renderHeader({ onSearch: function(q){ Storefront.search(q); } });
+
+    // السلة
+    CartUI.initSidebar();
+    CartUI.sync();
+
+    // Hero
+    document.getElementById('hero-store-name').textContent = settings.name;
+    var heroPhoneBtn = document.getElementById('hero-phone-btn');
+    if (settings.phone) {
+      heroPhoneBtn.innerHTML = '<a href="tel:' + settings.phone + '" class="flex items-center gap-2 rounded-xl bg-white/10 border border-white/30 text-white px-4 py-3 text-sm font-semibold hover:bg-white/20"><i class="fa-solid fa-phone"></i> ' + settings.phone + '</a>';
+    }
+
+    // Footer
+    document.getElementById('footer-logo').src = settings.logo;
+    document.getElementById('footer-name').textContent = settings.name;
+    document.getElementById('footer-copy').textContent = '© ' + new Date().getFullYear() + ' ' + settings.name + ' — جميع الحقوق محفوظة';
+    var fc = document.getElementById('footer-contact');
+    fc.innerHTML = (settings.phone   ? '<a href="tel:'   + settings.phone   + '" class="flex items-center gap-2 hover:text-white"><i class="fa-solid fa-phone fa-xs text-green-400"></i>' + settings.phone + '</a>' : '') +
+                   (settings.whatsapp? '<a href="https://wa.me/' + settings.whatsapp + '" target="_blank" class="flex items-center gap-2 hover:text-white"><i class="fa-brands fa-whatsapp fa-xs text-green-400"></i>واتساب</a>' : '') +
+                   (settings.address ? '<p class="flex items-start gap-2"><i class="fa-solid fa-location-dot fa-xs text-green-400 mt-0.5"></i>' + settings.address + '</p>' : '');
+
+    // إحصائيات
+    var products   = DB.Products.getAll();
+    var categories = DB.Products.getCategories();
+    document.getElementById('stats-products').textContent   = products.length;
+    document.getElementById('stats-categories').textContent = categories.length;
+
+    // Skeleton ثم عرض المنتجات
+    var skEl = document.getElementById('storefront-container');
+    skEl.innerHTML = Array.from({length:12}).map(function(){
+      return '<div class="rounded-2xl border border-gray-100 overflow-hidden bg-white">' +
+        '<div class="skeleton aspect-[4/3] w-full"></div>' +
+        '<div class="p-4 space-y-2">' +
+          '<div class="skeleton h-4 w-3/4 rounded"></div>' +
+          '<div class="skeleton h-3 w-1/2 rounded"></div>' +
+          '<div class="flex justify-between mt-3">' +
+            '<div class="skeleton h-5 w-16 rounded"></div>' +
+            '<div class="skeleton h-8 w-20 rounded-xl"></div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    requestAnimationFrame(function () {
+      Storefront.renderPills();
+      Storefront.render();
+    });
+  </script>
+</body>
+</html>

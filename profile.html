@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ملفي الشخصي</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    body { font-family: 'Tajawal', sans-serif; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <!-- Header placeholder -->
+  <div id="header-placeholder"></div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       HERO BANNER
+  ════════════════════════════════════════════════════════════════ -->
+  <section class="bg-gradient-to-l from-green-600 to-emerald-700 text-white">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14 flex flex-col items-center text-center gap-5">
+
+      <!-- Avatar -->
+      <div id="hero-avatar"
+           class="w-24 h-24 rounded-full bg-white/20 border-4 border-white/50 flex items-center justify-center text-3xl font-extrabold shadow-lg select-none">
+        ?
+      </div>
+
+      <!-- Name & Email -->
+      <div>
+        <h1 id="hero-name" class="text-2xl sm:text-3xl font-extrabold leading-tight">…</h1>
+        <p id="hero-email" class="text-green-200 text-sm mt-1">…</p>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="grid grid-cols-3 gap-3 sm:gap-5 w-full max-w-lg">
+        <div class="bg-white/15 backdrop-blur-sm rounded-2xl p-4 border border-white/25">
+          <p id="stat-total-orders" class="text-2xl font-extrabold">0</p>
+          <p class="text-green-200 text-xs mt-0.5">إجمالي الطلبات</p>
+        </div>
+        <div class="bg-white/15 backdrop-blur-sm rounded-2xl p-4 border border-white/25">
+          <p id="stat-delivered" class="text-2xl font-extrabold">0</p>
+          <p class="text-green-200 text-xs mt-0.5">تم التوصيل</p>
+        </div>
+        <div class="bg-white/15 backdrop-blur-sm rounded-2xl p-4 border border-white/25">
+          <p id="stat-spending" class="text-2xl font-extrabold leading-none">0</p>
+          <p id="stat-currency" class="text-green-200 text-xs mt-0.5">إجمالي الإنفاق</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       MAIN CONTENT
+  ════════════════════════════════════════════════════════════════ -->
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+
+    <!-- Tab Navigation -->
+    <div class="flex border-b border-gray-200 mb-8 gap-1">
+      <button id="tab-btn-personal"
+              onclick="window.switchTab('personal')"
+              class="flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 border-green-600 text-green-600 -mb-px transition-colors">
+        <i class="fa-regular fa-user fa-sm"></i> البيانات الشخصية
+      </button>
+      <button id="tab-btn-orders"
+              onclick="window.switchTab('orders')"
+              class="flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 -mb-px transition-colors">
+        <i class="fa-solid fa-box fa-sm"></i> طلباتي
+      </button>
+    </div>
+
+    <!-- ── TAB 1: البيانات الشخصية ── -->
+    <div id="tab-panel-personal">
+
+      <!-- Personal Info Card -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6">
+
+        <!-- Card Header -->
+        <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+          <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
+            <i class="fa-solid fa-id-card text-green-600"></i> المعلومات الشخصية
+          </h2>
+          <button id="edit-btn"
+                  onclick="window.toggleEditMode()"
+                  class="flex items-center gap-1.5 text-sm text-green-600 hover:text-green-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-green-50 transition-colors">
+            <i class="fa-regular fa-pen-to-square fa-sm"></i> تعديل
+          </button>
+        </div>
+
+        <!-- Form -->
+        <form onsubmit="return false;" class="p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+            <!-- First Name -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 mb-1.5">الاسم الأول</label>
+              <input id="field-firstName" type="text" disabled
+                     class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 outline-none focus:border-green-400 focus:bg-white focus:ring-2 focus:ring-green-100 disabled:opacity-60 disabled:cursor-not-allowed transition"/>
+            </div>
+
+            <!-- Last Name -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 mb-1.5">الاسم الأخير</label>
+              <input id="field-lastName" type="text" disabled
+                     class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 outline-none focus:border-green-400 focus:bg-white focus:ring-2 focus:ring-green-100 disabled:opacity-60 disabled:cursor-not-allowed transition"/>
+            </div>
+
+            <!-- Email (always readonly) -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 mb-1.5">البريد الإلكتروني</label>
+              <input id="field-email" type="email" readonly
+                     class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-500 outline-none cursor-not-allowed"/>
+            </div>
+
+            <!-- Phone -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 mb-1.5">رقم الهاتف</label>
+              <input id="field-phone" type="tel" disabled
+                     class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 outline-none focus:border-green-400 focus:bg-white focus:ring-2 focus:ring-green-100 disabled:opacity-60 disabled:cursor-not-allowed transition"/>
+            </div>
+
+            <!-- Address (full width) -->
+            <div class="md:col-span-2">
+              <label class="block text-xs font-semibold text-gray-500 mb-1.5">العنوان</label>
+              <textarea id="field-address" rows="2" disabled
+                        class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 outline-none focus:border-green-400 focus:bg-white focus:ring-2 focus:ring-green-100 disabled:opacity-60 disabled:cursor-not-allowed resize-none transition"></textarea>
+            </div>
+
+            <!-- Join Date (always readonly) -->
+            <div class="md:col-span-2">
+              <label class="block text-xs font-semibold text-gray-500 mb-1.5">تاريخ الانضمام</label>
+              <input id="field-createdAt" type="text" readonly
+                     class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-500 outline-none cursor-not-allowed"/>
+            </div>
+
+          </div>
+
+          <!-- Action buttons (hidden by default, shown in edit mode) -->
+          <div id="edit-actions" class="hidden mt-6 flex gap-3 justify-end">
+            <button type="button" onclick="window.cancelEdit()"
+                    class="px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition">
+              إلغاء
+            </button>
+            <button type="button" onclick="window.savePersonalInfo()"
+                    class="px-6 py-2.5 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 flex items-center gap-2 shadow-md shadow-green-200 transition">
+              <i class="fa-solid fa-floppy-disk fa-sm"></i> حفظ التغييرات
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Change Password Card -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100">
+
+        <!-- Card Header (toggle) -->
+        <button onclick="window.togglePasswordSection()"
+                class="w-full flex items-center justify-between px-6 py-5 text-right hover:bg-gray-50 rounded-2xl transition-colors">
+          <span class="text-base font-bold text-gray-800 flex items-center gap-2">
+            <i class="fa-solid fa-lock text-green-600"></i> تغيير كلمة المرور
+          </span>
+          <i id="pwd-chevron" class="fa-solid fa-chevron-down text-gray-400 transition-transform duration-200"></i>
+        </button>
+
+        <!-- Password Form (collapsed by default) -->
+        <div id="password-section" class="hidden px-6 pb-6 border-t border-gray-100">
+          <div class="pt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+
+            <!-- Current Password (full width) -->
+            <div class="md:col-span-2">
+              <label class="block text-xs font-semibold text-gray-500 mb-1.5">كلمة المرور الحالية</label>
+              <input id="field-current-pwd" type="password" placeholder="أدخل كلمة المرور الحالية"
+                     class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 outline-none focus:border-green-400 focus:bg-white focus:ring-2 focus:ring-green-100 transition"/>
+            </div>
+
+            <!-- New Password -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 mb-1.5">كلمة المرور الجديدة</label>
+              <input id="field-new-pwd" type="password" placeholder="6 أحرف على الأقل"
+                     class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 outline-none focus:border-green-400 focus:bg-white focus:ring-2 focus:ring-green-100 transition"/>
+            </div>
+
+            <!-- Confirm Password -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 mb-1.5">تأكيد كلمة المرور الجديدة</label>
+              <input id="field-confirm-pwd" type="password" placeholder="أعد كتابة كلمة المرور"
+                     class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 outline-none focus:border-green-400 focus:bg-white focus:ring-2 focus:ring-green-100 transition"/>
+            </div>
+
+          </div>
+
+          <div class="mt-5 flex justify-end">
+            <button type="button" onclick="window.changePassword()"
+                    class="px-6 py-2.5 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 flex items-center gap-2 shadow-md shadow-green-200 transition">
+              <i class="fa-solid fa-key fa-sm"></i> تغيير كلمة المرور
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- END TAB 1 -->
+
+    <!-- ── TAB 2: طلباتي ── -->
+    <div id="tab-panel-orders" class="hidden">
+
+      <!-- Filter Buttons -->
+      <div class="flex flex-wrap gap-2 mb-6">
+        <button data-status="ALL"
+                onclick="window.filterOrders(this, 'ALL')"
+                class="order-filter-btn px-4 py-2 rounded-xl text-sm font-semibold bg-green-600 text-white transition">
+          الكل
+        </button>
+        <button data-status="PENDING"
+                onclick="window.filterOrders(this, 'PENDING')"
+                class="order-filter-btn px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">
+          قيد المراجعة
+        </button>
+        <button data-status="CONFIRMED"
+                onclick="window.filterOrders(this, 'CONFIRMED')"
+                class="order-filter-btn px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">
+          تم التأكيد
+        </button>
+        <button data-status="PREPARING"
+                onclick="window.filterOrders(this, 'PREPARING')"
+                class="order-filter-btn px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">
+          جاري التحضير
+        </button>
+        <button data-status="DELIVERED"
+                onclick="window.filterOrders(this, 'DELIVERED')"
+                class="order-filter-btn px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">
+          تم التوصيل
+        </button>
+        <button data-status="CANCELLED"
+                onclick="window.filterOrders(this, 'CANCELLED')"
+                class="order-filter-btn px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">
+          ملغي
+        </button>
+      </div>
+
+      <!-- Desktop Table -->
+      <div id="orders-table-wrap" class="hidden sm:block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 border-b border-gray-100">
+            <tr>
+              <th class="text-right px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">رقم الطلب</th>
+              <th class="text-right px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">التاريخ</th>
+              <th class="text-right px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">المنتجات</th>
+              <th class="text-right px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">الإجمالي</th>
+              <th class="text-right px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">الحالة</th>
+              <th class="text-right px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">التفاصيل</th>
+            </tr>
+          </thead>
+          <tbody id="orders-table-body" class="divide-y divide-gray-50">
+            <!-- filled by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mobile Cards -->
+      <div id="orders-cards" class="sm:hidden space-y-4">
+        <!-- filled by JS -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="orders-empty" class="hidden flex flex-col items-center justify-center py-20 text-center gap-4">
+        <div class="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center">
+          <i class="fa-solid fa-box-open text-gray-300 text-3xl"></i>
+        </div>
+        <div>
+          <p class="text-gray-700 font-semibold text-lg">لا توجد طلبات</p>
+          <p class="text-gray-400 text-sm mt-1">لم تقم بأي طلبات بعد أو لا توجد طلبات بهذا الفلتر</p>
+        </div>
+        <a href="index.html"
+           class="mt-2 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 shadow-md shadow-green-200">
+          <i class="fa-solid fa-store fa-sm"></i> تصفّح المنتجات
+        </a>
+      </div>
+
+    </div>
+    <!-- END TAB 2 -->
+
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       ORDER DETAIL MODAL
+  ════════════════════════════════════════════════════════════════ -->
+  <div id="order-detail-modal"
+       class="fixed inset-0 z-[990] bg-black/50 flex items-center justify-center p-4 hidden"
+       onclick="if(event.target===this) window.closeOrderModal()">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-10">
+        <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
+          <i class="fa-solid fa-receipt text-green-600"></i> تفاصيل الطلب
+        </h3>
+        <button onclick="window.closeOrderModal()"
+                class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 text-gray-500 transition">
+          <i class="fa-solid fa-xmark fa-sm"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div id="order-detail-content" class="p-6 space-y-5">
+        <!-- filled by JS -->
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       SCRIPTS
+  ════════════════════════════════════════════════════════════════ -->
+  <script src="js/db.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/layout.js"></script>
+  <script>
+    DB.init();
+
+    if (Auth.requireAuth('auth.html')) {
+
+      // ── State ──────────────────────────────────────────────────────
+      var currentUser        = null;
+      var userOrders         = [];
+      var filteredOrders     = [];
+      var editModeActive     = false;
+      var passwordSectionOpen = false;
+
+      // ══════════════════════════════════════════════════════════════
+      // Tab switching
+      // ══════════════════════════════════════════════════════════════
+      window.switchTab = function (tab) {
+        var panels = { personal: document.getElementById('tab-panel-personal'), orders: document.getElementById('tab-panel-orders') };
+        var btns   = { personal: document.getElementById('tab-btn-personal'),   orders: document.getElementById('tab-btn-orders')   };
+
+        Object.keys(panels).forEach(function (key) {
+          if (key === tab) {
+            panels[key].classList.remove('hidden');
+            btns[key].classList.add('border-green-600', 'text-green-600');
+            btns[key].classList.remove('border-transparent', 'text-gray-500');
+          } else {
+            panels[key].classList.add('hidden');
+            btns[key].classList.remove('border-green-600', 'text-green-600');
+            btns[key].classList.add('border-transparent', 'text-gray-500');
+          }
+        });
+      };
+
+      // ══════════════════════════════════════════════════════════════
+      // Orders: filter
+      // ══════════════════════════════════════════════════════════════
+      window.filterOrders = function (btn, status) {
+        // Update active button styling
+        document.querySelectorAll('.order-filter-btn').forEach(function (b) {
+          b.classList.remove('bg-green-600', 'text-white');
+          b.classList.add('border', 'border-gray-200', 'text-gray-600');
+        });
+        btn.classList.add('bg-green-600', 'text-white');
+        btn.classList.remove('border', 'border-gray-200', 'text-gray-600');
+
+        if (status === 'ALL') {
+          filteredOrders = userOrders.slice();
+        } else {
+          filteredOrders = userOrders.filter(function (o) { return o.status === status; });
+        }
+        renderOrders();
+      };
+
+      // ══════════════════════════════════════════════════════════════
+      // Orders: render table + cards
+      // ══════════════════════════════════════════════════════════════
+      function renderOrders() {
+        var settings   = DB.Settings.get();
+        var tableBody  = document.getElementById('orders-table-body');
+        var cardsWrap  = document.getElementById('orders-cards');
+        var tableWrap  = document.getElementById('orders-table-wrap');
+        var emptyState = document.getElementById('orders-empty');
+
+        if (filteredOrders.length === 0) {
+          tableWrap.classList.add('hidden');
+          cardsWrap.classList.add('hidden');
+          emptyState.classList.remove('hidden');
+          emptyState.classList.add('flex');
+          return;
+        }
+
+        emptyState.classList.add('hidden');
+        emptyState.classList.remove('flex');
+        tableWrap.classList.remove('hidden');
+        cardsWrap.classList.remove('hidden');
+
+        // Sort newest first
+        var sorted = filteredOrders.slice().sort(function (a, b) {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+
+        // ── Desktop rows ──
+        tableBody.innerHTML = sorted.map(function (order) {
+          var shortId  = order.id.length > 16 ? order.id.substring(0, 16) + '…' : order.id;
+          var dateStr  = new Date(order.createdAt).toLocaleDateString('ar-EG', { year:'numeric', month:'short', day:'numeric' });
+          var itemsCount = (order.items || []).reduce(function (s, i) { return s + (i.qty || 1); }, 0);
+          return '<tr class="hover:bg-gray-50 transition-colors">' +
+            '<td class="px-5 py-4 font-mono text-xs text-gray-500">' + shortId + '</td>' +
+            '<td class="px-5 py-4 text-gray-600 whitespace-nowrap">' + dateStr + '</td>' +
+            '<td class="px-5 py-4 text-gray-700">' + itemsCount + ' قطعة</td>' +
+            '<td class="px-5 py-4 font-bold text-green-700 whitespace-nowrap">' + (order.total || 0).toFixed(2) + ' ' + (order.currency || settings.currency) + '</td>' +
+            '<td class="px-5 py-4">' + DB.statusBadge(order.status) + '</td>' +
+            '<td class="px-5 py-4">' +
+              '<button onclick="window.viewOrderDetails(\'' + order.id + '\')" ' +
+                      'class="text-xs font-semibold text-green-600 hover:text-green-700 border border-green-200 hover:border-green-400 rounded-lg px-3 py-1.5 hover:bg-green-50 transition">' +
+                '<i class="fa-solid fa-eye fa-xs ml-1"></i>التفاصيل' +
+              '</button>' +
+            '</td>' +
+          '</tr>';
+        }).join('');
+
+        // ── Mobile cards ──
+        cardsWrap.innerHTML = sorted.map(function (order) {
+          var shortId    = order.id.length > 20 ? order.id.substring(0, 20) + '…' : order.id;
+          var dateStr    = new Date(order.createdAt).toLocaleDateString('ar-EG', { year:'numeric', month:'short', day:'numeric' });
+          var itemsCount = (order.items || []).reduce(function (s, i) { return s + (i.qty || 1); }, 0);
+          return '<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">' +
+            '<div class="flex items-start justify-between gap-3 mb-3">' +
+              '<div>' +
+                '<p class="text-xs text-gray-400 font-mono mb-0.5">' + shortId + '</p>' +
+                '<p class="text-sm font-semibold text-gray-700">' + dateStr + '</p>' +
+              '</div>' +
+              DB.statusBadge(order.status) +
+            '</div>' +
+            '<div class="flex items-center justify-between">' +
+              '<span class="text-sm text-gray-500">' + itemsCount + ' قطعة</span>' +
+              '<span class="text-base font-bold text-green-700">' + (order.total || 0).toFixed(2) + ' ' + (order.currency || settings.currency) + '</span>' +
+            '</div>' +
+            '<button onclick="window.viewOrderDetails(\'' + order.id + '\')" ' +
+                    'class="mt-4 w-full text-sm font-semibold text-green-600 hover:text-green-700 border border-green-200 hover:border-green-400 rounded-xl py-2 hover:bg-green-50 transition flex items-center justify-center gap-2">' +
+              '<i class="fa-solid fa-eye fa-xs"></i> عرض التفاصيل' +
+            '</button>' +
+          '</div>';
+        }).join('');
+      }
+
+      // ══════════════════════════════════════════════════════════════
+      // Orders: view detail modal
+      // ══════════════════════════════════════════════════════════════
+      window.viewOrderDetails = function (orderId) {
+        var order    = DB.Orders.findById(orderId);
+        var settings = DB.Settings.get();
+        if (!order) return;
+
+        var dateStr  = new Date(order.createdAt).toLocaleDateString('ar-EG', { year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' });
+        var currency = order.currency || settings.currency;
+
+        // Build items HTML
+        var itemsHtml = (order.items || []).map(function (item) {
+          var subtotal = (item.price || 0) * (item.qty || 1);
+          return '<div class="flex items-center gap-3 py-3 border-b border-gray-50 last:border-0">' +
+            '<img src="' + (item.image || 'https://via.placeholder.com/56?text=م') + '" alt="' + (item.name || '') + '" ' +
+                 'class="w-14 h-14 object-cover rounded-xl bg-gray-100 flex-shrink-0" ' +
+                 'onerror="this.src=\'https://via.placeholder.com/56?text=م\'">' +
+            '<div class="flex-1 min-w-0">' +
+              '<p class="text-sm font-semibold text-gray-800 truncate">' + (item.name || 'منتج') + '</p>' +
+              '<p class="text-xs text-gray-400 mt-0.5">' + (item.qty || 1) + ' × ' + (item.price || 0).toFixed(2) + ' ' + currency + '</p>' +
+            '</div>' +
+            '<p class="text-sm font-bold text-green-700 flex-shrink-0">' + subtotal.toFixed(2) + ' ' + currency + '</p>' +
+          '</div>';
+        }).join('');
+
+        var content =
+          // Order meta
+          '<div class="bg-gray-50 rounded-xl p-4 space-y-2.5">' +
+            '<div class="flex items-center justify-between">' +
+              '<span class="text-xs font-semibold text-gray-400">رقم الطلب</span>' +
+              '<span class="text-xs font-mono text-gray-700">' + order.id + '</span>' +
+            '</div>' +
+            '<div class="flex items-center justify-between">' +
+              '<span class="text-xs font-semibold text-gray-400">التاريخ</span>' +
+              '<span class="text-xs text-gray-700">' + dateStr + '</span>' +
+            '</div>' +
+            '<div class="flex items-center justify-between">' +
+              '<span class="text-xs font-semibold text-gray-400">الحالة</span>' +
+              DB.statusBadge(order.status) +
+            '</div>' +
+          '</div>' +
+
+          // Items list
+          '<div>' +
+            '<h4 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">المنتجات</h4>' +
+            '<div class="divide-y divide-gray-50">' + itemsHtml + '</div>' +
+          '</div>' +
+
+          // Total
+          '<div class="bg-green-50 rounded-xl px-4 py-3.5 flex items-center justify-between">' +
+            '<span class="text-sm font-bold text-gray-700">الإجمالي</span>' +
+            '<span class="text-lg font-extrabold text-green-700">' + (order.total || 0).toFixed(2) + ' ' + currency + '</span>' +
+          '</div>' +
+
+          // Address (if present)
+          (order.address ?
+            '<div class="flex items-start gap-2 text-sm text-gray-600">' +
+              '<i class="fa-solid fa-location-dot text-green-500 mt-0.5 flex-shrink-0"></i>' +
+              '<div><span class="font-semibold text-gray-700 block text-xs mb-0.5">عنوان التوصيل</span>' + order.address + '</div>' +
+            '</div>' : '') +
+
+          // Notes (if present)
+          (order.notes ?
+            '<div class="flex items-start gap-2 text-sm text-gray-600">' +
+              '<i class="fa-regular fa-note-sticky text-amber-500 mt-0.5 flex-shrink-0"></i>' +
+              '<div><span class="font-semibold text-gray-700 block text-xs mb-0.5">ملاحظات</span>' + order.notes + '</div>' +
+            '</div>' : '');
+
+        document.getElementById('order-detail-content').innerHTML = content;
+        document.getElementById('order-detail-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      };
+
+      window.closeOrderModal = function () {
+        document.getElementById('order-detail-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+      };
+
+      // ══════════════════════════════════════════════════════════════
+      // Personal Info: toggle edit mode
+      // ══════════════════════════════════════════════════════════════
+      window.toggleEditMode = function () {
+        editModeActive = true;
+        var fields = ['field-firstName', 'field-lastName', 'field-phone'];
+        fields.forEach(function (id) {
+          var el = document.getElementById(id);
+          el.disabled = false;
+          el.classList.remove('bg-gray-50', 'opacity-60', 'cursor-not-allowed');
+          el.classList.add('bg-white');
+        });
+        var addr = document.getElementById('field-address');
+        addr.disabled = false;
+        addr.classList.remove('bg-gray-50', 'opacity-60', 'cursor-not-allowed');
+        addr.classList.add('bg-white');
+
+        document.getElementById('edit-btn').classList.add('hidden');
+        document.getElementById('edit-actions').classList.remove('hidden');
+      };
+
+      window.cancelEdit = function () {
+        editModeActive = false;
+        // Restore original values
+        document.getElementById('field-firstName').value = currentUser.firstName || '';
+        document.getElementById('field-lastName').value  = currentUser.lastName  || '';
+        document.getElementById('field-phone').value     = currentUser.phone     || '';
+        document.getElementById('field-address').value   = currentUser.address   || '';
+
+        var fields = ['field-firstName', 'field-lastName', 'field-phone'];
+        fields.forEach(function (id) {
+          var el = document.getElementById(id);
+          el.disabled = true;
+          el.classList.add('bg-gray-50');
+          el.classList.remove('bg-white');
+        });
+        var addr = document.getElementById('field-address');
+        addr.disabled = true;
+        addr.classList.add('bg-gray-50');
+        addr.classList.remove('bg-white');
+
+        document.getElementById('edit-btn').classList.remove('hidden');
+        document.getElementById('edit-actions').classList.add('hidden');
+      };
+
+      window.savePersonalInfo = function () {
+        var firstName = document.getElementById('field-firstName').value.trim();
+        var lastName  = document.getElementById('field-lastName').value.trim();
+        var phone     = document.getElementById('field-phone').value.trim();
+        var address   = document.getElementById('field-address').value.trim();
+
+        if (!firstName || !lastName) {
+          UI.showToast('يرجى إدخال الاسم الأول والاسم الأخير', 'error');
+          return;
+        }
+
+        var result = DB.Users.update(currentUser.email, { firstName: firstName, lastName: lastName, phone: phone, address: address });
+        if (!result.success) {
+          UI.showToast(result.message || 'حدث خطأ أثناء الحفظ', 'error');
+          return;
+        }
+
+        // Update session
+        currentUser = Object.assign({}, currentUser, { firstName: firstName, lastName: lastName, phone: phone, address: address });
+        DB.Session.set(currentUser);
+
+        // Exit edit mode
+        editModeActive = false;
+        var fields = ['field-firstName', 'field-lastName', 'field-phone'];
+        fields.forEach(function (id) {
+          var el = document.getElementById(id);
+          el.disabled = true;
+          el.classList.add('bg-gray-50');
+          el.classList.remove('bg-white');
+        });
+        var addr = document.getElementById('field-address');
+        addr.disabled = true;
+        addr.classList.add('bg-gray-50');
+        addr.classList.remove('bg-white');
+
+        document.getElementById('edit-btn').classList.remove('hidden');
+        document.getElementById('edit-actions').classList.add('hidden');
+
+        // Update hero
+        populateHero();
+
+        // Re-render header to reflect new name
+        Layout.renderHeader();
+
+        UI.showToast('تم حفظ البيانات بنجاح', 'success');
+      };
+
+      // ══════════════════════════════════════════════════════════════
+      // Password section toggle
+      // ══════════════════════════════════════════════════════════════
+      window.togglePasswordSection = function () {
+        passwordSectionOpen = !passwordSectionOpen;
+        var section  = document.getElementById('password-section');
+        var chevron  = document.getElementById('pwd-chevron');
+        if (passwordSectionOpen) {
+          section.classList.remove('hidden');
+          chevron.classList.add('rotate-180');
+        } else {
+          section.classList.add('hidden');
+          chevron.classList.remove('rotate-180');
+        }
+      };
+
+      // ══════════════════════════════════════════════════════════════
+      // Change password
+      // ══════════════════════════════════════════════════════════════
+      window.changePassword = function () {
+        var currentPwd = document.getElementById('field-current-pwd').value;
+        var newPwd     = document.getElementById('field-new-pwd').value;
+        var confirmPwd = document.getElementById('field-confirm-pwd').value;
+
+        if (!currentPwd || !newPwd || !confirmPwd) {
+          UI.showToast('يرجى ملء جميع حقول كلمة المرور', 'error');
+          return;
+        }
+        if (currentPwd !== currentUser.password) {
+          UI.showToast('كلمة المرور الحالية غير صحيحة', 'error');
+          return;
+        }
+        if (newPwd !== confirmPwd) {
+          UI.showToast('كلمتا المرور الجديدتان غير متطابقتين', 'error');
+          return;
+        }
+        if (newPwd.length < 6) {
+          UI.showToast('يجب أن تكون كلمة المرور الجديدة 6 أحرف على الأقل', 'error');
+          return;
+        }
+
+        var result = DB.Users.update(currentUser.email, { password: newPwd });
+        if (!result.success) {
+          UI.showToast(result.message || 'حدث خطأ أثناء تغيير كلمة المرور', 'error');
+          return;
+        }
+
+        currentUser = Object.assign({}, currentUser, { password: newPwd });
+        DB.Session.set(currentUser);
+
+        // Clear fields
+        document.getElementById('field-current-pwd').value = '';
+        document.getElementById('field-new-pwd').value     = '';
+        document.getElementById('field-confirm-pwd').value = '';
+
+        UI.showToast('تم تغيير كلمة المرور بنجاح', 'success');
+      };
+
+      // ══════════════════════════════════════════════════════════════
+      // Hero population
+      // ══════════════════════════════════════════════════════════════
+      function populateHero() {
+        var settings   = DB.Settings.get();
+        var firstName  = currentUser.firstName || '';
+        var lastName   = currentUser.lastName  || '';
+        var initials   = (firstName[0] || '') + (lastName[0] || '');
+        if (!initials) initials = '؟';
+
+        document.getElementById('hero-avatar').textContent = initials;
+        document.getElementById('hero-name').textContent   = (firstName + ' ' + lastName).trim() || 'مستخدم';
+        document.getElementById('hero-email').textContent  = currentUser.email || '';
+
+        // Stats
+        var total     = userOrders.length;
+        var delivered = userOrders.filter(function (o) { return o.status === 'DELIVERED'; }).length;
+        var spending  = userOrders.reduce(function (s, o) { return s + (o.total || 0); }, 0);
+
+        document.getElementById('stat-total-orders').textContent = total;
+        document.getElementById('stat-delivered').textContent    = delivered;
+        document.getElementById('stat-spending').textContent     = spending.toFixed(0);
+        document.getElementById('stat-currency').textContent     = settings.currency;
+      }
+
+      // ══════════════════════════════════════════════════════════════
+      // Form population
+      // ══════════════════════════════════════════════════════════════
+      function populateForm() {
+        document.getElementById('field-firstName').value = currentUser.firstName || '';
+        document.getElementById('field-lastName').value  = currentUser.lastName  || '';
+        document.getElementById('field-email').value     = currentUser.email     || '';
+        document.getElementById('field-phone').value     = currentUser.phone     || '';
+        document.getElementById('field-address').value   = currentUser.address   || '';
+
+        var joinDate = currentUser.createdAt
+          ? new Date(currentUser.createdAt).toLocaleDateString('ar-EG', { year:'numeric', month:'long', day:'numeric' })
+          : '—';
+        document.getElementById('field-createdAt').value = joinDate;
+      }
+
+      // ══════════════════════════════════════════════════════════════
+      // INITIALIZATION
+      // ══════════════════════════════════════════════════════════════
+      currentUser = Auth.getCurrentUser();
+      Layout.renderHeader();
+      CartUI.initSidebar();
+      CartUI.sync();
+
+      userOrders     = DB.Orders.getByEmail(currentUser.email);
+      filteredOrders = userOrders.slice();
+
+      populateHero();
+      populateForm();
+      renderOrders();
+
+    }
+  </script>
+
+</body>
+</html>
