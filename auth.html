@@ -20,7 +20,7 @@
     .strength-bar { height:4px; border-radius:2px; transition:all .3s; }
   </style>
 </head>
-<body class="auth-bg min-h-screen flex items-center justify-center p-4">
+<body class="auth-bg min-h-screen flex items-start sm:items-center justify-center p-4 py-6">
 
   <div class="w-full max-w-md">
     <!-- الشعار -->
@@ -32,7 +32,7 @@
     <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
 
       <!-- ── Login ── -->
-      <div id="form-login" class="p-8">
+      <div id="form-login" class="p-5 sm:p-8">
         <h2 class="text-2xl font-bold text-gray-800 mb-1">مرحباً بعودتك 👋</h2>
         <p class="text-gray-500 text-sm mb-7">سجّل دخولك للمتابعة</p>
         <form id="login-form" novalidate class="space-y-4">
@@ -69,11 +69,11 @@
       </div>
 
       <!-- ── Register ── -->
-      <div id="form-register" class="p-8 hidden">
+      <div id="form-register" class="p-5 sm:p-8 hidden">
         <h2 class="text-2xl font-bold text-gray-800 mb-1">إنشاء حساب جديد ✨</h2>
         <p class="text-gray-500 text-sm mb-7">انضم إلينا وتسوّق بكل سهولة</p>
         <form id="register-form" novalidate class="space-y-4">
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 min-[380px]:grid-cols-2 gap-3">
             <div class="relative">
               <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-regular fa-user fa-sm"></i></span>
               <input id="reg-first" type="text" placeholder="الاسم الأول" class="form-input pr-10" autocomplete="given-name"/>
@@ -113,7 +113,7 @@
       </div>
 
       <!-- ── Reset ── -->
-      <div id="form-reset" class="p-8 hidden">
+      <div id="form-reset" class="p-5 sm:p-8 hidden">
         <button id="back-to-login" class="flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm mb-6"><i class="fa-solid fa-arrow-right"></i> العودة</button>
         <div class="text-center mb-6">
           <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3"><i class="fa-solid fa-key text-green-600 text-2xl"></i></div>

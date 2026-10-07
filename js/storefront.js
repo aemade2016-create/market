@@ -24,12 +24,12 @@ var Storefront = (function () {
             'onerror="this.src=\'https://via.placeholder.com/300x200?text=' + encodeURIComponent(product.name) + '\'">' +
           '<span class="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-xs font-semibold text-gray-600 px-2 py-0.5 rounded-full border border-gray-100">' + product.category + '</span>' +
         '</div>' +
-        '<div class="p-4">' +
+        '<div class="p-3 sm:p-4">' +
           '<h3 class="text-sm font-bold text-gray-800 mb-1 line-clamp-2 leading-snug">' + product.name + '</h3>' +
-          '<div class="flex items-center justify-between mt-2">' +
+          '<div class="flex flex-col min-[480px]:flex-row min-[480px]:items-center justify-between gap-2 mt-2">' +
             '<span class="text-green-600 font-extrabold text-base">' + product.price.toFixed(2) + ' <span class="text-xs font-medium">' + settings.currency + '</span></span>' +
             '<button data-add-btn onclick="Storefront.addById(\'' + product.id + '\')" ' +
-              'class="' + (qty > 0 ? 'hidden' : '') + ' flex items-center gap-1.5 rounded-xl bg-green-600 px-3 py-2 text-white text-xs font-bold hover:bg-green-700 active:scale-95 shadow-sm shadow-green-200">' +
+              'class="' + (qty > 0 ? 'hidden' : '') + ' flex w-full min-[480px]:w-auto items-center justify-center gap-1.5 rounded-xl bg-green-600 px-3 py-2 text-white text-xs font-bold hover:bg-green-700 active:scale-95 shadow-sm shadow-green-200">' +
               '<i class="fa-solid fa-plus fa-xs"></i> أضف للسلة</button>' +
             '<div data-qty-ctrl class="' + (qty > 0 ? '' : 'hidden') + ' flex items-center gap-1.5">' +
               '<button onclick="Storefront.dec(\'' + product.id + '\')" class="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-red-100 hover:text-red-600"><i class="fa-solid fa-minus fa-xs"></i></button>' +

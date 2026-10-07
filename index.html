@@ -30,9 +30,9 @@
           <p class="text-green-300 text-sm font-semibold mb-2 flex items-center gap-1.5 justify-center sm:justify-start">
             <i class="fa-solid fa-bolt"></i> عروض اليوم الحصرية
           </p>
-          <h1 id="hero-store-name" class="text-3xl sm:text-4xl font-extrabold leading-tight mb-3">سوبر ماركت النجمة</h1>
+          <h1 id="hero-store-name" class="text-2xl min-[400px]:text-3xl sm:text-4xl font-extrabold leading-tight mb-3 break-words">سوبر ماركت النجمة</h1>
           <p class="text-green-100 text-base mb-6 max-w-md">أطازج المنتجات بأفضل الأسعار، توصيل سريع لباب بيتك 🚚</p>
-          <div class="flex items-center gap-3 justify-center sm:justify-start">
+          <div class="flex flex-wrap items-center gap-3 justify-center sm:justify-start">
             <button onclick="document.getElementById('storefront-container').scrollIntoView({behavior:'smooth'})"
                     class="flex items-center gap-2 rounded-xl bg-white text-green-700 px-5 py-3 font-bold text-sm hover:bg-green-50 shadow-lg">
               <i class="fa-solid fa-store"></i> تسوّق الآن
@@ -132,7 +132,7 @@
     document.getElementById('hero-store-name').textContent = settings.name;
     var heroPhoneBtn = document.getElementById('hero-phone-btn');
     if (settings.phone) {
-      heroPhoneBtn.innerHTML = '<a href="tel:' + settings.phone + '" class="flex items-center gap-2 rounded-xl bg-white/10 border border-white/30 text-white px-4 py-3 text-sm font-semibold hover:bg-white/20"><i class="fa-solid fa-phone"></i> ' + settings.phone + '</a>';
+      heroPhoneBtn.innerHTML = '<a href="tel:' + settings.phone + '" class="flex max-w-full items-center gap-2 break-all rounded-xl bg-white/10 border border-white/30 text-white px-4 py-3 text-sm font-semibold hover:bg-white/20"><i class="fa-solid fa-phone flex-shrink-0"></i> ' + settings.phone + '</a>';
     }
 
     // Footer

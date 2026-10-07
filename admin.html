@@ -260,11 +260,11 @@
         <section id="section-products" class="admin-section">
           <!-- Header -->
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
-            <div class="flex items-center gap-3">
+            <div class="flex flex-col min-[480px]:flex-row gap-3 min-w-0">
               <input id="product-search" type="search" placeholder="ابحث عن منتج..." oninput="window.filterProductsTable()"
-                class="border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 bg-white w-56"/>
+                class="w-full min-w-0 sm:w-56 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 bg-white"/>
               <select id="product-category-filter" onchange="window.filterProductsTable()"
-                class="border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-green-400 bg-white">
+                class="w-full min-[480px]:w-auto border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-green-400 bg-white">
                 <option value="">كل الأقسام</option>
               </select>
             </div>
@@ -538,7 +538,7 @@
         </div>
 
         <!-- Price & Stock -->
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-1.5">السعر <span class="text-red-500">*</span></label>
             <input id="pm-price" type="number" min="0" step="0.01" placeholder="0.00"

@@ -84,6 +84,10 @@ var Checkout = (function () {
     document.body.style.overflow = '';
   }
 
+  function normalizeWhatsAppNumber(number) {
+    return String(number || '').replace(/\D/g, '');
+  }
+
   function submitOrder() {
     var name    = document.getElementById('co-name').value.trim();
     var phone   = document.getElementById('co-phone').value.trim();
@@ -102,6 +106,17 @@ var Checkout = (function () {
     var cart     = DB.Cart.get();
     var settings = DB.Settings.get();
     var total    = DB.Cart.total();
+    var whatsappNumber = normalizeWhatsAppNumber(settings.whatsapp);
+
+    if (!/^\d{8,15}$/.test(whatsappNumber)) {
+      errEl.textContent = 'رقم واتساب المتجر غير مضبوط. يرجى التواصل مع إدارة المتجر.';
+      errEl.classList.remove('hidden');
+      return;
+    }
+
+    var btn = document.getElementById('co-submit');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري حفظ الطلب...';
 
     var result = DB.Orders.add({
       email: user.email,
@@ -112,28 +127,33 @@ var Checkout = (function () {
       items: cart.map(function (i) { return { id:i.id, name:i.name, price:i.price, qty:i.qty, image:i.image }; }),
       total: total,
     });
-    if (!result.success) { UI.showToast('حدث خطأ أثناء حفظ الطلب.', 'error'); return; }
+    if (!result.success) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-brands fa-whatsapp text-xl"></i> تأكيد الطلب وإرساله عبر واتساب';
+      UI.showToast('حدث خطأ أثناء حفظ الطلب.', 'error');
+      return;
+    }
 
     // تحديث بيانات العميل
     if (phone || address) DB.Users.update(user.email, { phone:phone, address:address });
 
-    // حالة التحميل
-    var btn = document.getElementById('co-submit');
-    btn.disabled = true;
-    btn.innerHTML = '<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> جاري تجهيز الطلب...';
+    var order = result.order;
+    var waMsg = buildWhatsAppMessage(order, settings);
+    var waURL = 'https://wa.me/' + whatsappNumber + '?text=' + encodeURIComponent(waMsg);
+    var whatsappWindow = null;
 
-    setTimeout(function () {
-      var order  = result.order;
-      var waMsg  = buildWhatsAppMessage(order, settings);
-      var waURL  = 'https://wa.me/' + settings.whatsapp + '?text=' + encodeURIComponent(waMsg);
+    try {
+      whatsappWindow = window.open(waURL, '_blank');
+      if (whatsappWindow) whatsappWindow.opener = null;
+    } catch (error) {
+      whatsappWindow = null;
+    }
 
-      DB.Cart.clear();
-      CartUI.sync();
-      CartUI.closeCart();
-      closeModal();
-      showSuccess(order, settings);
-      setTimeout(function () { window.open(waURL, '_blank'); }, 500);
-    }, 800);
+    DB.Cart.clear();
+    CartUI.sync();
+    CartUI.closeCart();
+    closeModal();
+    showSuccess(order, settings, waURL, !whatsappWindow);
   }
 
   function buildWhatsAppMessage(order, settings) {
@@ -146,17 +166,18 @@ var Checkout = (function () {
       '\n━━━━━━━━━━━━━━━━━━━━━\n💰 *الإجمالي: ' + order.total.toFixed(2) + ' ' + order.currency + '*\n━━━━━━━━━━━━━━━━━━━━━';
   }
 
-  function showSuccess(order, settings) {
+  function showSuccess(order, settings, waURL, popupBlocked) {
     var overlay = document.createElement('div');
     overlay.className = 'fixed inset-0 z-[1002] bg-black/50 flex items-center justify-center p-4';
     overlay.innerHTML =
       '<div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-8 text-center">' +
         '<div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-circle-check text-green-500 text-4xl"></i></div>' +
-        '<h2 class="text-2xl font-extrabold text-gray-800 mb-2">تم إرسال طلبك! 🎉</h2>' +
+        '<h2 class="text-2xl font-extrabold text-gray-800 mb-2">تم تسجيل طلبك! 🎉</h2>' +
         '<p class="text-gray-500 text-sm mb-1">رقم الطلب:</p>' +
         '<p class="text-green-600 font-bold text-lg mb-4">' + order.id + '</p>' +
-        '<p class="text-gray-500 text-sm mb-6 leading-relaxed">سيتم التواصل معك عبر واتساب لتأكيد الطلب وتحديد موعد التوصيل.</p>' +
+        '<p class="text-gray-500 text-sm mb-6 leading-relaxed">' + (popupBlocked ? 'تم حفظ الطلب، لكن المتصفح منع فتح واتساب تلقائيًا. افتح الرسالة واضغط إرسال لإتمام الطلب.' : 'تم حفظ الطلب وفتح رسالة المتجر على واتساب. اضغط إرسال داخل واتساب لإتمام الطلب.') + '</p>' +
         '<div class="space-y-2">' +
+          '<a href="' + waURL + '" target="_blank" rel="noopener noreferrer" class="block w-full rounded-xl bg-green-600 py-3 text-white font-bold text-sm hover:bg-green-700"><i class="fa-brands fa-whatsapp ml-1"></i> ' + (popupBlocked ? 'فتح واتساب وإرسال الطلب' : 'إعادة فتح رسالة واتساب') + '</a>' +
           '<a href="profile.html" class="block w-full rounded-xl bg-green-600 py-3 text-white font-bold text-sm hover:bg-green-700"><i class="fa-solid fa-list-check ml-1"></i> عرض طلباتي</a>' +
           '<button onclick="this.closest(\'.fixed\').remove();document.body.style.overflow=\'\';" class="block w-full rounded-xl border border-gray-200 py-3 text-gray-600 text-sm hover:bg-gray-50">متابعة التسوق</button>' +
         '</div>' +

@@ -59,15 +59,15 @@
   <main class="max-w-4xl mx-auto px-4 sm:px-6 py-8">
 
     <!-- Tab Navigation -->
-    <div class="flex border-b border-gray-200 mb-8 gap-1">
+    <div class="flex flex-wrap border-b border-gray-200 mb-8 gap-1">
       <button id="tab-btn-personal"
               onclick="window.switchTab('personal')"
-              class="flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 border-green-600 text-green-600 -mb-px transition-colors">
+              class="flex flex-1 sm:flex-none items-center justify-center gap-2 px-3 sm:px-5 py-3 text-sm font-semibold border-b-2 border-green-600 text-green-600 -mb-px transition-colors">
         <i class="fa-regular fa-user fa-sm"></i> البيانات الشخصية
       </button>
       <button id="tab-btn-orders"
               onclick="window.switchTab('orders')"
-              class="flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 -mb-px transition-colors">
+              class="flex flex-1 sm:flex-none items-center justify-center gap-2 px-3 sm:px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 -mb-px transition-colors">
         <i class="fa-solid fa-box fa-sm"></i> طلباتي
       </button>
     </div>
@@ -79,7 +79,7 @@
       <div class="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6">
 
         <!-- Card Header -->
-        <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+        <div class="flex items-center justify-between gap-3 px-4 sm:px-6 py-5 border-b border-gray-100">
           <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
             <i class="fa-solid fa-id-card text-green-600"></i> المعلومات الشخصية
           </h2>
@@ -91,7 +91,7 @@
         </div>
 
         <!-- Form -->
-        <form onsubmit="return false;" class="p-6">
+        <form onsubmit="return false;" class="p-4 sm:p-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 
             <!-- First Name -->

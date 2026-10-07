@@ -42,7 +42,7 @@ var Layout = (function () {
               '<span class="text-lg font-extrabold text-gray-800 hidden sm:inline">' + settings.name + '</span>' +
             '</a>' +
             (opts.showSearch !== false ?
-              '<div class="flex-1 max-w-lg mx-auto"><div class="relative">' +
+              '<div class="min-w-0 flex-1 max-w-lg mx-auto"><div class="relative">' +
                 '<span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"><i class="fa-solid fa-magnifying-glass fa-sm"></i></span>' +
                 '<input id="header-search" type="search" placeholder="ابحث عن منتج..." autocomplete="off" ' +
                   'class="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pr-9 pl-4 text-sm text-gray-800 outline-none focus:border-green-400 focus:bg-white focus:ring-2 focus:ring-green-100">' +
