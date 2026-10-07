@@ -75,8 +75,8 @@ set phone = '01008074308',
     whatsapp = '01008074308',
     updated_at = now()
 where id = 1
-  and phone = '01008074308'
-  and whatsapp = '01008074308';
+  and phone = '+201000000000'
+  and whatsapp = '201000000000';
 
 -- Used by RLS policies. Browser clients cannot edit admin_users directly.
 create or replace function public.is_store_admin()
@@ -93,7 +93,7 @@ as $$
   );
 $$;
 
-revoke all on function public.is_store_admin() from public;
+revoke all on function public.is_store_admin() from public, anon;
 grant execute on function public.is_store_admin() to authenticated;
 revoke all on table public.admin_users from anon, authenticated;
 
@@ -178,9 +178,9 @@ begin
 end;
 $$;
 
-revoke all on function public.create_profile_for_auth_user() from public;
-revoke all on function public.admin_list_emails() from public;
-revoke all on function public.admin_manage_user(text, boolean) from public;
+revoke all on function public.create_profile_for_auth_user() from public, anon;
+revoke all on function public.admin_list_emails() from public, anon;
+revoke all on function public.admin_manage_user(text, boolean) from public, anon;
 grant execute on function public.admin_list_emails() to authenticated;
 grant execute on function public.admin_manage_user(text, boolean) to authenticated;
 
