@@ -18,7 +18,7 @@
     #category-pills::-webkit-scrollbar { display:none; }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-900">
+<body class="overflow-x-clip bg-gray-50 text-gray-900">
 
   <div id="header-placeholder"></div>
 
@@ -71,8 +71,8 @@
   </div>
 
   <!-- Products -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-    <div id="storefront-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+  <main class="mx-auto w-full min-w-0 max-w-7xl px-4 py-8 sm:px-6">
+    <div id="storefront-container" class="grid min-w-0 grid-cols-1 gap-4 min-[400px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       <!-- skeleton يُنشأ بـ JS -->
     </div>
   </main>
@@ -83,8 +83,8 @@
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-8">
         <div>
           <div class="flex items-center gap-2 mb-3">
-            <img id="footer-logo" src="https://img.icons8.com/fluency/96/shopping-cart.png" class="w-8 h-8" alt="شعار"/>
-            <span id="footer-name" class="text-white font-bold text-lg">سوبر ماركت النجمة</span>
+            <img id="footer-logo" src="https://img.icons8.com/fluency/96/shopping-cart.png" class="h-8 w-8 shrink-0 object-contain" alt="شعار"/>
+            <span id="footer-name" class="min-w-0 break-words text-lg font-bold text-white">سوبر ماركت النجمة</span>
           </div>
           <p class="text-sm leading-relaxed">نقدم أفضل المنتجات الطازجة والمتنوعة بأسعار منافسة مع توصيل سريع.</p>
         </div>
@@ -102,7 +102,7 @@
         </div>
       </div>
       <div class="border-t border-gray-700 pt-5 text-center text-xs">
-        <p id="footer-copy">© 2026 سوبر ماركت النجمة — جميع الحقوق محفوظة</p>
+        <p id="footer-copy" class="break-words">© 2026 سوبر ماركت النجمة — جميع الحقوق محفوظة</p>
       </div>
     </div>
   </footer>

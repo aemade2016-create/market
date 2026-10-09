@@ -29,12 +29,12 @@ var Storefront = (function () {
           '<div class="flex flex-col min-[480px]:flex-row min-[480px]:items-center justify-between gap-2 mt-2">' +
             '<span class="text-green-600 font-extrabold text-base">' + product.price.toFixed(2) + ' <span class="text-xs font-medium">' + settings.currency + '</span></span>' +
             '<button data-add-btn onclick="Storefront.addById(\'' + product.id + '\')" ' +
-              'class="' + (qty > 0 ? 'hidden' : '') + ' flex w-full min-[480px]:w-auto items-center justify-center gap-1.5 rounded-xl bg-green-600 px-3 py-2 text-white text-xs font-bold hover:bg-green-700 active:scale-95 shadow-sm shadow-green-200">' +
+              'class="' + (qty > 0 ? 'hidden' : '') + ' flex min-h-10 w-full min-[480px]:w-auto items-center justify-center gap-1.5 rounded-xl bg-green-600 px-3 py-2 text-white text-xs font-bold hover:bg-green-700 active:scale-95 shadow-sm shadow-green-200">' +
               '<i class="fa-solid fa-plus fa-xs"></i> أضف للسلة</button>' +
             '<div data-qty-ctrl class="' + (qty > 0 ? '' : 'hidden') + ' flex items-center gap-1.5">' +
-              '<button onclick="Storefront.dec(\'' + product.id + '\')" class="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-red-100 hover:text-red-600"><i class="fa-solid fa-minus fa-xs"></i></button>' +
+              '<button onclick="Storefront.dec(\'' + product.id + '\')" class="h-10 w-10 rounded-lg bg-gray-100 flex flex-shrink-0 items-center justify-center text-gray-600 hover:bg-red-100 hover:text-red-600"><i class="fa-solid fa-minus fa-xs"></i></button>' +
               '<span data-qty-display class="w-7 text-center text-sm font-bold text-gray-800">' + qty + '</span>' +
-              '<button onclick="Storefront.inc(\'' + product.id + '\')" class="w-7 h-7 rounded-lg bg-green-600 flex items-center justify-center text-white hover:bg-green-700"><i class="fa-solid fa-plus fa-xs"></i></button>' +
+              '<button onclick="Storefront.inc(\'' + product.id + '\')" class="h-10 w-10 rounded-lg bg-green-600 flex flex-shrink-0 items-center justify-center text-white hover:bg-green-700"><i class="fa-solid fa-plus fa-xs"></i></button>' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -78,7 +78,7 @@ var Storefront = (function () {
           '<div class="flex-1 h-px bg-gradient-to-l from-transparent to-gray-200"></div>' +
           '<span class="text-xs text-gray-400 font-medium bg-gray-100 px-2.5 py-1 rounded-full">' + items.length + ' منتج</span>' +
         '</div>' +
-        '<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">' +
+        '<div class="grid min-w-0 grid-cols-1 gap-3 min-[400px]:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">' +
           items.map(buildCard).join('') +
         '</div>' +
       '</section>';

@@ -12,7 +12,7 @@
     body { font-family: 'Tajawal', sans-serif; }
   </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="overflow-x-clip bg-gray-50 min-h-screen">
 
   <!-- Header placeholder -->
   <div id="header-placeholder"></div>
@@ -56,7 +56,7 @@
   <!-- ═══════════════════════════════════════════════════════════════
        MAIN CONTENT
   ════════════════════════════════════════════════════════════════ -->
-  <main class="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+  <main class="mx-auto w-full min-w-0 max-w-4xl px-4 py-8 sm:px-6">
 
     <!-- Tab Navigation -->
     <div class="flex flex-wrap border-b border-gray-200 mb-8 gap-1">
@@ -85,7 +85,7 @@
           </h2>
           <button id="edit-btn"
                   onclick="window.toggleEditMode()"
-                  class="flex items-center gap-1.5 text-sm text-green-600 hover:text-green-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-green-50 transition-colors">
+                  class="flex min-h-10 items-center gap-1.5 text-sm text-green-600 hover:text-green-700 font-semibold px-3 rounded-lg hover:bg-green-50 transition-colors">
             <i class="fa-regular fa-pen-to-square fa-sm"></i> تعديل
           </button>
         </div>
@@ -141,11 +141,11 @@
           <!-- Action buttons (hidden by default, shown in edit mode) -->
           <div id="edit-actions" class="hidden mt-6 flex gap-3 justify-end">
             <button type="button" onclick="window.cancelEdit()"
-                    class="px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition">
+                    class="min-h-10 px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition">
               إلغاء
             </button>
             <button type="button" onclick="window.savePersonalInfo()"
-                    class="px-6 py-2.5 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 flex items-center gap-2 shadow-md shadow-green-200 transition">
+                    class="min-h-10 px-6 py-2.5 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 flex items-center gap-2 shadow-md shadow-green-200 transition">
               <i class="fa-solid fa-floppy-disk fa-sm"></i> حفظ التغييرات
             </button>
           </div>
@@ -193,7 +193,7 @@
 
           <div class="mt-5 flex justify-end">
             <button type="button" onclick="window.changePassword()"
-                    class="px-6 py-2.5 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 flex items-center gap-2 shadow-md shadow-green-200 transition">
+                    class="min-h-10 px-6 py-2.5 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 flex items-center gap-2 shadow-md shadow-green-200 transition">
               <i class="fa-solid fa-key fa-sm"></i> تغيير كلمة المرور
             </button>
           </div>
@@ -210,39 +210,39 @@
       <div class="flex flex-wrap gap-2 mb-6">
         <button data-status="ALL"
                 onclick="window.filterOrders(this, 'ALL')"
-                class="order-filter-btn px-4 py-2 rounded-xl text-sm font-semibold bg-green-600 text-white transition">
+                class="order-filter-btn min-h-10 px-4 py-2 rounded-xl text-sm font-semibold bg-green-600 text-white transition">
           الكل
         </button>
         <button data-status="PENDING"
                 onclick="window.filterOrders(this, 'PENDING')"
-                class="order-filter-btn px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">
+                class="order-filter-btn min-h-10 px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">
           قيد المراجعة
         </button>
         <button data-status="CONFIRMED"
                 onclick="window.filterOrders(this, 'CONFIRMED')"
-                class="order-filter-btn px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">
+                class="order-filter-btn min-h-10 px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">
           تم التأكيد
         </button>
         <button data-status="PREPARING"
                 onclick="window.filterOrders(this, 'PREPARING')"
-                class="order-filter-btn px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">
+                class="order-filter-btn min-h-10 px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">
           جاري التحضير
         </button>
         <button data-status="DELIVERED"
                 onclick="window.filterOrders(this, 'DELIVERED')"
-                class="order-filter-btn px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">
+                class="order-filter-btn min-h-10 px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">
           تم التوصيل
         </button>
         <button data-status="CANCELLED"
                 onclick="window.filterOrders(this, 'CANCELLED')"
-                class="order-filter-btn px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">
+                class="order-filter-btn min-h-10 px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">
           ملغي
         </button>
       </div>
 
       <!-- Desktop Table -->
-      <div id="orders-table-wrap" class="hidden sm:block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <table class="w-full text-sm">
+      <div id="orders-table-wrap" class="hidden min-w-0 max-w-full overflow-x-auto sm:block bg-white rounded-2xl shadow-sm border border-gray-100">
+        <table class="w-full min-w-[680px] text-sm">
           <thead class="bg-gray-50 border-b border-gray-100">
             <tr>
               <th class="text-right px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">رقم الطلب</th>
@@ -274,7 +274,7 @@
           <p class="text-gray-400 text-sm mt-1">لم تقم بأي طلبات بعد أو لا توجد طلبات بهذا الفلتر</p>
         </div>
         <a href="index.html"
-           class="mt-2 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 shadow-md shadow-green-200">
+           class="mt-2 inline-flex min-h-10 items-center gap-2 px-5 py-2.5 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 shadow-md shadow-green-200">
           <i class="fa-solid fa-store fa-sm"></i> تصفّح المنتجات
         </a>
       </div>
@@ -447,7 +447,7 @@
               '<span class="text-base font-bold text-green-700">' + (order.total || 0).toFixed(2) + ' ' + (order.currency || settings.currency) + '</span>' +
             '</div>' +
             '<button onclick="window.viewOrderDetails(\'' + order.id + '\')" ' +
-                    'class="mt-4 w-full text-sm font-semibold text-green-600 hover:text-green-700 border border-green-200 hover:border-green-400 rounded-xl py-2 hover:bg-green-50 transition flex items-center justify-center gap-2">' +
+                    'class="mt-4 min-h-10 w-full text-sm font-semibold text-green-600 hover:text-green-700 border border-green-200 hover:border-green-400 rounded-xl py-2 hover:bg-green-50 transition flex items-center justify-center gap-2">' +
               '<i class="fa-solid fa-eye fa-xs"></i> عرض التفاصيل' +
             '</button>' +
           '</div>';

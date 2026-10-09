@@ -114,7 +114,7 @@ var CartUI = (function () {
 
     var sb = document.createElement('aside');
     sb.id = 'cart-sidebar';
-    sb.className = 'fixed top-0 left-0 h-full w-full max-w-sm bg-white shadow-2xl z-[1000] flex flex-col transform translate-x-full transition-transform duration-300 invisible pointer-events-none';
+    sb.className = 'fixed top-0 left-0 h-full w-full sm:w-96 bg-white shadow-2xl z-[1000] flex flex-col transform translate-x-full transition-transform duration-300 invisible pointer-events-none';
 
     var ov = document.createElement('div');
     ov.id = 'cart-overlay';
@@ -141,12 +141,12 @@ var CartUI = (function () {
       sb.innerHTML =
         '<div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">' +
           '<h2 class="text-lg font-bold text-gray-800 flex items-center gap-2"><i class="fa-solid fa-cart-shopping text-green-600"></i> سلة المشتريات</h2>' +
-          '<button type="button" onclick="CartUI.closeCart()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 text-gray-500"><i class="fa-solid fa-xmark fa-sm"></i></button>' +
+          '<button type="button" onclick="CartUI.closeCart()" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 text-gray-500"><i class="fa-solid fa-xmark fa-sm"></i></button>' +
         '</div>' +
         '<div class="flex-1 flex flex-col items-center justify-center gap-4 p-8 text-center">' +
           '<div class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center"><i class="fa-solid fa-cart-shopping text-gray-300 text-4xl"></i></div>' +
           '<div><p class="text-gray-700 font-semibold mb-1">سلتك فارغة</p><p class="text-gray-400 text-sm">أضف منتجات لبدء التسوق</p></div>' +
-          '<button type="button" onclick="CartUI.closeCart()" class="rounded-xl bg-green-600 text-white px-6 py-2.5 text-sm font-bold hover:bg-green-700">تصفّح المنتجات</button>' +
+          '<button type="button" onclick="CartUI.closeCart()" class="min-h-10 rounded-xl bg-green-600 text-white px-6 py-2.5 text-sm font-bold hover:bg-green-700">تصفّح المنتجات</button>' +
         '</div>';
       return;
     }
@@ -158,9 +158,9 @@ var CartUI = (function () {
           '<p class="text-sm font-semibold text-gray-800 truncate">' + item.name + '</p>' +
           '<p class="text-green-600 font-bold text-sm mt-0.5">' + item.price.toFixed(2) + ' ' + settings.currency + '</p>' +
           '<div class="flex items-center gap-2 mt-2">' +
-            '<button type="button" onclick="CartUI.updateQty(\'' + item.id + '\',' + (item.qty - 1) + ')" class="w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-red-50 hover:text-red-500"><i class="fa-solid fa-minus fa-xs"></i></button>' +
+            '<button type="button" onclick="CartUI.updateQty(\'' + item.id + '\',' + (item.qty - 1) + ')" class="h-10 w-10 flex-shrink-0 rounded-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-red-50 hover:text-red-500"><i class="fa-solid fa-minus fa-xs"></i></button>' +
             '<span class="w-8 text-center text-sm font-bold text-gray-800">' + item.qty + '</span>' +
-            '<button type="button" onclick="CartUI.updateQty(\'' + item.id + '\',' + (item.qty + 1) + ')" class="w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-green-50 hover:text-green-600"><i class="fa-solid fa-plus fa-xs"></i></button>' +
+            '<button type="button" onclick="CartUI.updateQty(\'' + item.id + '\',' + (item.qty + 1) + ')" class="h-10 w-10 flex-shrink-0 rounded-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-green-50 hover:text-green-600"><i class="fa-solid fa-plus fa-xs"></i></button>' +
             '<span class="mr-auto text-xs text-gray-400">' + (item.price * item.qty).toFixed(2) + ' ' + settings.currency + '</span>' +
           '</div>' +
         '</div>' +
@@ -171,14 +171,14 @@ var CartUI = (function () {
     sb.innerHTML =
       '<div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">' +
         '<h2 class="text-lg font-bold text-gray-800 flex items-center gap-2"><i class="fa-solid fa-cart-shopping text-green-600"></i> سلة المشتريات <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">' + count + '</span></h2>' +
-        '<button type="button" onclick="CartUI.closeCart()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 text-gray-500"><i class="fa-solid fa-xmark fa-sm"></i></button>' +
+        '<button type="button" onclick="CartUI.closeCart()" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 text-gray-500"><i class="fa-solid fa-xmark fa-sm"></i></button>' +
       '</div>' +
       '<div class="flex-1 overflow-y-auto">' + itemsHtml + '</div>' +
       '<div class="border-t border-gray-100 p-5 space-y-3 flex-shrink-0 bg-white">' +
         '<div class="flex justify-between text-sm text-gray-500"><span>عدد المنتجات</span><span class="font-semibold text-gray-700">' + count + ' قطعة</span></div>' +
         '<div class="flex justify-between font-bold text-gray-800"><span class="text-base">الإجمالي</span><span class="text-green-600 text-lg">' + total.toFixed(2) + ' ' + settings.currency + '</span></div>' +
-        '<button type="button" onclick="Checkout.open()" class="w-full rounded-xl bg-green-600 py-3.5 text-white font-bold text-base hover:bg-green-700 flex items-center justify-center gap-2 shadow-lg shadow-green-200"><i class="fa-solid fa-bag-shopping"></i> إتمام الطلب</button>' +
-        '<button type="button" onclick="CartUI.clearAll()" class="w-full rounded-xl border border-gray-200 py-2.5 text-sm text-gray-500 hover:bg-red-50 hover:text-red-500 hover:border-red-200"><i class="fa-solid fa-trash-can ml-1"></i> تفريغ السلة</button>' +
+        '<button type="button" onclick="Checkout.open()" class="min-h-10 w-full rounded-xl bg-green-600 py-3.5 text-white font-bold text-base hover:bg-green-700 flex items-center justify-center gap-2 shadow-lg shadow-green-200"><i class="fa-solid fa-bag-shopping"></i> إتمام الطلب</button>' +
+        '<button type="button" onclick="CartUI.clearAll()" class="min-h-10 w-full rounded-xl border border-gray-200 py-2.5 text-sm text-gray-500 hover:bg-red-50 hover:text-red-500 hover:border-red-200"><i class="fa-solid fa-trash-can ml-1"></i> تفريغ السلة</button>' +
       '</div>';
   }
 
