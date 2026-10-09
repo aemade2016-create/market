@@ -11,6 +11,15 @@ var Storefront = (function () {
 
   var activeCategory = 'all';
 
+  function escapeHtml(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function buildCard(product) {
     var settings = DB.Settings.get();
     var cart     = DB.Cart.get();
@@ -22,7 +31,7 @@ var Storefront = (function () {
           '<img src="' + product.image + '" alt="' + product.name + '" loading="lazy" ' +
             'class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" ' +
             'onerror="this.src=\'https://via.placeholder.com/300x200?text=' + encodeURIComponent(product.name) + '\'">' +
-          '<span class="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-xs font-semibold text-gray-600 px-2 py-0.5 rounded-full border border-gray-100">' + product.category + '</span>' +
+          '<span class="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-xs font-semibold text-gray-600 px-2 py-0.5 rounded-full border border-gray-100">' + escapeHtml(product.category) + '</span>' +
         '</div>' +
         '<div class="p-3 sm:p-4">' +
           '<h3 class="text-sm font-bold text-gray-800 mb-1 line-clamp-2 leading-snug">' + product.name + '</h3>' +
@@ -74,11 +83,11 @@ var Storefront = (function () {
       return '<section class="col-span-full mb-8" id="cat-' + encodeURIComponent(cat) + '">' +
         '<div class="flex items-center gap-3 mb-4">' +
           '<div class="flex items-center gap-2"><span class="text-2xl">' + (ICONS[cat] || '🛒') + '</span>' +
-            '<h2 class="text-xl font-extrabold text-gray-800">' + cat + '</h2></div>' +
+            '<h2 class="text-xl font-extrabold text-gray-800">' + escapeHtml(cat) + '</h2></div>' +
           '<div class="flex-1 h-px bg-gradient-to-l from-transparent to-gray-200"></div>' +
           '<span class="text-xs text-gray-400 font-medium bg-gray-100 px-2.5 py-1 rounded-full">' + items.length + ' منتج</span>' +
         '</div>' +
-        '<div class="grid min-w-0 grid-cols-1 gap-3 min-[400px]:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">' +
+        '<div class="grid min-w-0 grid-cols-1 gap-3 min-[400px]:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">' +
           items.map(buildCard).join('') +
         '</div>' +
       '</section>';
@@ -90,15 +99,18 @@ var Storefront = (function () {
     if (!container) return;
     var cats = DB.Products.getCategories();
     container.innerHTML =
-      '<button data-cat="all" onclick="Storefront.filterCat(\'all\')" ' +
-        'class="cat-pill flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-semibold ' + (activeCategory === 'all' ? 'bg-green-600 text-white border-green-600' : 'bg-white text-gray-600 border-gray-200 hover:border-green-400 hover:text-green-600') + ' flex-shrink-0">' +
-        '<i class="fa-solid fa-border-all fa-xs"></i> الكل</button>' +
+      '<button type="button" data-cat="all" aria-label="كل الأقسام" title="كل الأقسام" ' +
+        'class="cat-pill flex h-10 w-10 items-center justify-center gap-1.5 rounded-xl border text-sm font-semibold transition-all sm:h-auto sm:w-auto sm:rounded-full sm:px-4 sm:py-2 ' + (activeCategory === 'all' ? 'bg-green-600 text-white border-green-600' : 'bg-white text-gray-600 border-gray-200 hover:border-green-400 hover:text-green-600') + '">' +
+        '<i class="fa-solid fa-border-all fa-xs" aria-hidden="true"></i><span class="hidden sm:inline">الكل</span></button>' +
       cats.map(function (cat) {
         var isActive = activeCategory === cat;
-        return '<button data-cat="' + cat + '" onclick="Storefront.filterCat(\'' + cat + '\')" ' +
-          'class="cat-pill flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-semibold flex-shrink-0 ' + (isActive ? 'bg-green-600 text-white border-green-600' : 'bg-white text-gray-600 border-gray-200 hover:border-green-400 hover:text-green-600') + '">' +
-          (ICONS[cat] || '🛒') + ' ' + cat + '</button>';
+        return '<button type="button" data-cat="' + escapeHtml(cat) + '" aria-label="' + escapeHtml(cat) + '" title="' + escapeHtml(cat) + '" ' +
+          'class="cat-pill flex h-10 w-10 items-center justify-center gap-1.5 rounded-xl border text-sm font-semibold transition-all sm:h-auto sm:w-auto sm:rounded-full sm:px-4 sm:py-2 ' + (isActive ? 'bg-green-600 text-white border-green-600' : 'bg-white text-gray-600 border-gray-200 hover:border-green-400 hover:text-green-600') + '">' +
+          '<span aria-hidden="true">' + (ICONS[cat] || '🛒') + '</span><span class="hidden sm:inline">' + escapeHtml(cat) + '</span></button>';
       }).join('');
+    container.querySelectorAll('.cat-pill').forEach(function (button) {
+      button.addEventListener('click', function () { filterCat(button.dataset.cat); });
+    });
   }
 
   function filterCat(category) {
@@ -111,7 +123,7 @@ var Storefront = (function () {
     // تحديث الأزرار
     document.querySelectorAll('.cat-pill').forEach(function (btn) {
       var active = btn.dataset.cat === activeCategory;
-      btn.className = 'cat-pill flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-semibold flex-shrink-0 transition-all ' +
+      btn.className = 'cat-pill flex h-10 w-10 items-center justify-center gap-1.5 rounded-xl border text-sm font-semibold transition-all sm:h-auto sm:w-auto sm:rounded-full sm:px-4 sm:py-2 ' +
         (active ? 'bg-green-600 text-white border-green-600' : 'bg-white text-gray-600 border-gray-200 hover:border-green-400 hover:text-green-600');
     });
 

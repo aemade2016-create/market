@@ -28,6 +28,26 @@ var Auth = (function () {
     }
   }
 
+  async function loginWithOAuth(provider) {
+    if (provider !== 'google' && provider !== 'facebook') {
+      return { success: false, message: 'مزود تسجيل الدخول غير مدعوم.' };
+    }
+    if (window.location.protocol === 'file:') {
+      return { success: false, message: 'افتح الموقع عبر localhost أو نطاق منشور لتسجيل الدخول الاجتماعي.' };
+    }
+    try {
+      var redirectTo = window.location.origin + window.location.pathname;
+      var result = await window.supabaseClient.auth.signInWithOAuth({
+        provider: provider,
+        options: { redirectTo: redirectTo },
+      });
+      if (result.error) return { success: false, message: errorMessage(result.error) };
+      return { success: true };
+    } catch (error) {
+      return { success: false, message: errorMessage(error) };
+    }
+  }
+
   async function register(data) {
     var firstName = data.firstName;
     var lastName = data.lastName;
@@ -120,5 +140,5 @@ var Auth = (function () {
     }
   }
 
-  return { login: login, register: register, logout: logout, getCurrentUser: getCurrentUser, isLoggedIn: isLoggedIn, isAdmin: isAdmin, requireAuth: requireAuth, requireAdmin: requireAdmin, redirectIfLoggedIn: redirectIfLoggedIn, requestPasswordReset: requestPasswordReset, updatePassword: updatePassword, changePassword: changePassword };
+  return { login: login, loginWithOAuth: loginWithOAuth, register: register, logout: logout, getCurrentUser: getCurrentUser, isLoggedIn: isLoggedIn, isAdmin: isAdmin, requireAuth: requireAuth, requireAdmin: requireAdmin, redirectIfLoggedIn: redirectIfLoggedIn, requestPasswordReset: requestPasswordReset, updatePassword: updatePassword, changePassword: changePassword };
 })();

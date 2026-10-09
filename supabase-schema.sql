@@ -14,9 +14,13 @@ create table if not exists public.profiles (
   last_name text not null default '',
   phone text not null default '',
   address text not null default '',
+  orders_enabled boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.profiles
+  add column if not exists orders_enabled boolean not null default true;
 
 create table if not exists public.products (
   id text primary key,
@@ -29,6 +33,35 @@ create table if not exists public.products (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+create table if not exists public.store_categories (
+  name text primary key check (length(btrim(name)) between 1 and 80),
+  created_at timestamptz not null default now()
+);
+
+insert into public.store_categories (name)
+select distinct category
+from public.products
+where category is not null and length(btrim(category)) between 1 and 80
+on conflict (name) do nothing;
+
+create unique index if not exists store_categories_name_lower_idx
+  on public.store_categories (lower(name));
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'products_category_fkey'
+      and conrelid = 'public.products'::regclass
+  ) then
+    alter table public.products
+      add constraint products_category_fkey
+      foreign key (category) references public.store_categories(name)
+      on update cascade on delete restrict;
+  end if;
+end;
+$$;
 
 create table if not exists public.orders (
   id text primary key,
@@ -96,6 +129,24 @@ $$;
 revoke all on function public.is_store_admin() from public, anon;
 grant execute on function public.is_store_admin() to authenticated;
 revoke all on table public.admin_users from anon, authenticated;
+
+create or replace function public.protect_profile_order_access()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if old.orders_enabled is distinct from new.orders_enabled and not public.is_store_admin() then
+    raise exception 'Only store admins can change customer order access';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists protect_profile_order_access on public.profiles;
+create trigger protect_profile_order_access
+  before update on public.profiles
+  for each row execute function public.protect_profile_order_access();
 
 create or replace function public.create_profile_for_auth_user()
 returns trigger
@@ -189,6 +240,7 @@ alter table public.orders enable row level security;
 alter table public.store_settings enable row level security;
 alter table public.admin_users enable row level security;
 alter table public.profiles enable row level security;
+alter table public.store_categories enable row level security;
 
 grant select, insert, update on public.profiles to authenticated;
 
@@ -214,6 +266,22 @@ create policy "Users create own profile"
 -- Products are visible in the public storefront; only admins can change them.
 grant select on public.products to anon, authenticated;
 grant insert, update, delete on public.products to authenticated;
+
+grant select on public.store_categories to anon, authenticated;
+grant insert, update, delete on public.store_categories to authenticated;
+
+drop policy if exists "Store categories are publicly readable" on public.store_categories;
+create policy "Store categories are publicly readable"
+  on public.store_categories for select
+  to anon, authenticated
+  using (true);
+
+drop policy if exists "Admins manage store categories" on public.store_categories;
+create policy "Admins manage store categories"
+  on public.store_categories for all
+  to authenticated
+  using (public.is_store_admin())
+  with check (public.is_store_admin());
 
 drop policy if exists "Products are publicly readable" on public.products;
 create policy "Products are publicly readable"
@@ -244,6 +312,12 @@ create policy "Customers create own orders"
   with check (
     user_id = auth.uid()
     and lower(email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+    and exists (
+      select 1
+      from public.profiles as customer
+      where customer.id = auth.uid()
+        and customer.orders_enabled
+    )
   );
 
 drop policy if exists "Admins manage orders" on public.orders;
@@ -274,3 +348,5 @@ create policy "Admins manage store settings"
 insert into public.admin_users (user_id)
 select id from auth.users where lower(email) = lower('aemade2026@gmail.com')
 on conflict (user_id) do nothing;
+
+notify pgrst, 'reload schema';

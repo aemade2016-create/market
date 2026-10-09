@@ -19,6 +19,10 @@ var Checkout = (function () {
     }
 
     var user     = Auth.getCurrentUser();
+    if (user && user.ordersEnabled === false) {
+      UI.showToast('تم إيقاف استقبال الطلبات لهذا الحساب. تواصل مع إدارة المتجر.', 'error');
+      return;
+    }
     var settings = DB.Settings.get();
     var total    = DB.Cart.total();
 
@@ -85,7 +89,10 @@ var Checkout = (function () {
   }
 
   function normalizeWhatsAppNumber(number) {
-    return String(number || '').replace(/\D/g, '');
+    var digits = String(number || '').replace(/\D/g, '');
+    if (digits.indexOf('00') === 0) digits = digits.slice(2);
+    if (digits.charAt(0) === '0') digits = '20' + digits.slice(1);
+    return digits;
   }
 
   async function submitOrder() {

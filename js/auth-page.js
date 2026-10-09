@@ -188,9 +188,18 @@ document.addEventListener('DOMContentLoaded', async function () {
     UI.showToast(result.message, 'success');
   });
 
-  // ── Social Login (محاكاة) ─────────────────────────────────────────
-  window.handleSocialLogin = function (provider) {
-    UI.showToast('ميزة تسجيل الدخول عبر ' + (provider === 'google' ? 'Google' : 'Facebook') + ' ستكون متاحة قريباً 🚀', 'info');
+  // ── Social Login ──────────────────────────────────────────────────
+  window.handleSocialLogin = async function (provider) {
+    var buttonId = provider === 'google' ? 'google-login' : 'facebook-login';
+    var button = document.getElementById(buttonId);
+    var defaultHTML = button ? button.innerHTML : '';
+    if (button) setLoading(button, true);
+    var result = await Auth.loginWithOAuth(provider);
+    if (!result.success) {
+      if (button) setLoading(button, false, defaultHTML);
+      showError('login-error', result.message || 'تعذر بدء تسجيل الدخول الاجتماعي.');
+      return;
+    }
   };
 
   // ── Loading ───────────────────────────────────────────────────────

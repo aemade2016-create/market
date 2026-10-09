@@ -7,6 +7,7 @@
     Admins: DB.Admins,
     Settings: DB.Settings,
     Products: DB.Products,
+    Categories: DB.Categories,
     Orders: DB.Orders,
     Session: DB.Session,
     Cart: DB.Cart,
@@ -15,6 +16,8 @@
   var cache = {
     settings: null,
     products: [],
+    categories: [],
+    categoriesTableMissing: false,
     orders: [],
     profiles: [],
     admins: [],
@@ -31,6 +34,32 @@
     return { success: false, message: error && error.message ? error.message : 'حدث خطأ في الاتصال بقاعدة البيانات.' };
   }
 
+  function isMissingCategoriesTable(error) {
+    return !!error && (error.code === 'PGRST205' || /store_categories.*schema cache|schema cache.*store_categories/i.test(error.message || ''));
+  }
+
+  function missingCategoriesMessage() {
+    return 'جدول الأقسام غير موجود في Supabase. شغّل ملف supabase-schema.sql في SQL Editor ثم أعد تحميل الصفحة.';
+  }
+
+  async function invokeAdminUsers(body) {
+    try {
+      var response = await requireClient().functions.invoke('admin-users', { body: body });
+      if (response.error) {
+        var message = response.error.message;
+        try {
+          var details = await response.error.context.json();
+          if (details && details.message) message = details.message;
+        } catch (error) {}
+        return { success: false, message: message };
+      }
+      if (!response.data || response.data.success !== true) {
+        return { success: false, message: response.data && response.data.message || 'تعذر تنفيذ العملية.' };
+      }
+      return { success: true, data: response.data };
+    } catch (error) { return asError(error); }
+  }
+
   function profileFromRow(row) {
     if (!row) return null;
     return {
@@ -41,7 +70,17 @@
       phone: row.phone || '',
       address: row.address || '',
       createdAt: row.created_at,
+      ordersEnabled: row.orders_enabled !== false,
     };
+  }
+
+  function authName(metadata, field) {
+    metadata = metadata || {};
+    if (metadata[field]) return metadata[field];
+    var fullName = String(metadata.full_name || metadata.name || '').trim();
+    if (!fullName) return '';
+    var parts = fullName.split(/\s+/);
+    return field === 'first_name' ? parts[0] : parts.slice(1).join(' ');
   }
 
   function orderFromRow(row) {
@@ -75,9 +114,20 @@
     if (settingsResult.error) throw settingsResult.error;
     cache.settings = settingsResult.data;
 
+    var categoriesResult = await client.from('store_categories').select('name').order('name', { ascending: true });
+    cache.categoriesTableMissing = isMissingCategoriesTable(categoriesResult.error);
+    if (categoriesResult.error && !cache.categoriesTableMissing) throw categoriesResult.error;
+    cache.categories = (categoriesResult.data || []).map(function (category) { return category.name; });
+
     var productsResult = await client.from('products').select('*').order('name', { ascending: true });
     if (productsResult.error) throw productsResult.error;
     cache.products = productsResult.data || [];
+    if (cache.categoriesTableMissing) {
+      cache.categories = cache.products.reduce(function (categories, product) {
+        if (product.category && categories.indexOf(product.category) === -1) categories.push(product.category);
+        return categories;
+      }, []);
+    }
 
     if (currentUser) {
       var ordersResult = await client.from('orders').select('*').order('created_at', { ascending: false });
@@ -112,6 +162,20 @@
     if (cache.products.length === 0) {
       var legacyProducts = localDB.Products.getAll();
       if (legacyProducts.length) {
+        var categoryNames = [];
+        legacyProducts.forEach(function (product) {
+          var category = String(product.category || '').trim();
+          if (category && categoryNames.indexOf(category) === -1) categoryNames.push(category);
+        });
+        if (categoryNames.length && !cache.categoriesTableMissing) {
+          var categoriesResult = await client.from('store_categories')
+            .upsert(categoryNames.map(function (name) { return { name: name }; }), { onConflict: 'name' })
+            .select('name');
+          if (categoriesResult.error) throw categoriesResult.error;
+          cache.categories = (categoriesResult.data || []).map(function (category) { return category.name; });
+        } else if (cache.categoriesTableMissing) {
+          cache.categories = categoryNames;
+        }
         var seedRows = legacyProducts.map(function (product) {
           return {
             id: String(product.id),
@@ -157,8 +221,8 @@
       currentUser = Object.assign({}, profile, {
         id: authUser.id,
         email: authUser.email,
-        firstName: profile.firstName || (authUser.user_metadata && authUser.user_metadata.first_name) || '',
-        lastName: profile.lastName || (authUser.user_metadata && authUser.user_metadata.last_name) || '',
+        firstName: profile.firstName || authName(authUser.user_metadata, 'first_name'),
+        lastName: profile.lastName || authName(authUser.user_metadata, 'last_name'),
         isAdmin: isAdmin,
       });
     }
@@ -187,8 +251,8 @@
       currentUser = Object.assign({}, profile, {
         id: authUser.id,
         email: authUser.email,
-        firstName: profile.firstName || (authUser.user_metadata && authUser.user_metadata.first_name) || '',
-        lastName: profile.lastName || (authUser.user_metadata && authUser.user_metadata.last_name) || '',
+        firstName: profile.firstName || authName(authUser.user_metadata, 'first_name'),
+        lastName: profile.lastName || authName(authUser.user_metadata, 'last_name'),
         isAdmin: isAdmin,
       });
     }
@@ -225,12 +289,7 @@
   DB.Products = {
     getAll: function () { return cache.products.slice(); },
     findById: function (id) { return cache.products.find(function (product) { return product.id === id; }) || null; },
-    getCategories: function () {
-      return cache.products.reduce(function (categories, product) {
-        if (categories.indexOf(product.category) === -1) categories.push(product.category);
-        return categories;
-      }, []);
-    },
+    getCategories: function () { return cache.categories.slice(); },
     getByCategory: function (category) { return cache.products.filter(function (product) { return product.category === category; }); },
     search: function (query) {
       var searchText = String(query || '').toLowerCase();
@@ -284,12 +343,103 @@
     },
   };
 
+  DB.Categories = {
+    getAll: function () { return cache.categories.slice(); },
+    add: async function (name) {
+      if (!isAdmin) return { success: false, message: 'غير مسموح بإدارة الأقسام.' };
+      if (cache.categoriesTableMissing) return { success: false, message: missingCategoriesMessage() };
+      var normalized = String(name || '').trim();
+      if (!normalized || normalized.length > 80) return { success: false, message: 'اسم القسم مطلوب ويجب ألا يتجاوز 80 حرفاً.' };
+      try {
+        var result = await requireClient().from('store_categories').insert({ name: normalized }).select('name').single();
+        if (result.error) {
+          if (result.error.code === '23505') return { success: false, message: 'هذا القسم موجود بالفعل.' };
+          return asError(result.error);
+        }
+        cache.categories.push(result.data.name);
+        cache.categories.sort(function (a, b) { return a.localeCompare(b, 'ar'); });
+        return { success: true, category: result.data.name };
+      } catch (error) { return asError(error); }
+    },
+    rename: async function (oldName, newName) {
+      if (!isAdmin) return { success: false, message: 'غير مسموح بإدارة الأقسام.' };
+      if (cache.categoriesTableMissing) return { success: false, message: missingCategoriesMessage() };
+      var normalized = String(newName || '').trim();
+      if (!normalized || normalized.length > 80) return { success: false, message: 'اسم القسم مطلوب ويجب ألا يتجاوز 80 حرفاً.' };
+      if (normalized === oldName) return { success: true, category: normalized };
+      try {
+        var result = await requireClient().from('store_categories')
+          .update({ name: normalized }).eq('name', oldName).select('name').single();
+        if (result.error) {
+          if (result.error.code === '23505') return { success: false, message: 'يوجد قسم آخر بهذا الاسم.' };
+          return asError(result.error);
+        }
+        cache.categories = cache.categories.map(function (category) { return category === oldName ? result.data.name : category; });
+        cache.categories.sort(function (a, b) { return a.localeCompare(b, 'ar'); });
+        cache.products = cache.products.map(function (product) {
+          return product.category === oldName ? Object.assign({}, product, { category: result.data.name }) : product;
+        });
+        return { success: true, category: result.data.name };
+      } catch (error) { return asError(error); }
+    },
+    remove: async function (name) {
+      if (!isAdmin) return { success: false, message: 'غير مسموح بإدارة الأقسام.' };
+      if (cache.categoriesTableMissing) return { success: false, message: missingCategoriesMessage() };
+      try {
+        var productsResult = await requireClient().from('products')
+          .select('id', { count: 'exact', head: true }).eq('category', name);
+        if (productsResult.error) return asError(productsResult.error);
+        if ((productsResult.count || 0) > 0) return { success: false, message: 'لا يمكن حذف قسم يحتوي على منتجات. انقل المنتجات إلى قسم آخر أولاً.' };
+
+        var result = await requireClient().from('store_categories').delete().eq('name', name);
+        if (result.error) {
+          if (result.error.code === '23503') return { success: false, message: 'لا يمكن حذف قسم مرتبط بمنتجات.' };
+          return asError(result.error);
+        }
+        cache.categories = cache.categories.filter(function (category) { return category !== name; });
+        return { success: true };
+      } catch (error) { return asError(error); }
+    },
+  };
+
   DB.Users = {
     getAll: function () { return cache.profiles.slice(); },
     findByEmail: function (email) {
       return cache.profiles.find(function (profile) { return profile.email.toLowerCase() === String(email).toLowerCase(); }) || null;
     },
     add: function () { return Promise.resolve({ success: false, message: 'أنشئ الحساب عبر Supabase Auth.' }); },
+    invite: async function (user) {
+      if (!isAdmin) return { success: false, message: 'غير مسموح بدعوة مستخدمين.' };
+      var result = await invokeAdminUsers({
+        action: 'invite',
+        email: String(user.email || '').trim().toLowerCase(),
+        firstName: String(user.firstName || '').trim(),
+        lastName: String(user.lastName || '').trim(),
+      });
+      if (!result.success) return result;
+      try { await refresh(); } catch (error) {}
+      return { success: true, user: result.data.user };
+    },
+    setOrdersEnabled: async function (id, enabled) {
+      if (!isAdmin) return { success: false, message: 'غير مسموح بتعديل حالة هذا الحساب.' };
+      try {
+        var result = await requireClient().from('profiles')
+          .update({ orders_enabled: !!enabled, updated_at: new Date().toISOString() })
+          .eq('id', id).select('*').single();
+        if (result.error) return asError(result.error);
+        var updated = profileFromRow(result.data);
+        cache.profiles = cache.profiles.map(function (profile) { return profile.id === id ? updated : profile; });
+        if (currentUser && currentUser.id === id) currentUser = Object.assign({}, currentUser, updated);
+        return { success: true, user: updated };
+      } catch (error) { return asError(error); }
+    },
+    remove: async function (id) {
+      if (!isAdmin) return { success: false, message: 'غير مسموح بحذف الحسابات.' };
+      var result = await invokeAdminUsers({ action: 'delete', userId: id });
+      if (!result.success) return result;
+      cache.profiles = cache.profiles.filter(function (profile) { return profile.id !== id; });
+      return { success: true };
+    },
     update: async function (email, updates) {
       if (!currentUser || (!isAdmin && currentUser.email.toLowerCase() !== String(email).toLowerCase())) {
         return { success: false, message: 'غير مسموح بتعديل هذا الحساب.' };
@@ -354,6 +504,7 @@
     findById: function (id) { return cache.orders.find(function (order) { return order.id === id; }) || null; },
     add: async function (order) {
       if (!currentUser) return { success: false, message: 'يجب تسجيل الدخول أولاً.' };
+      if (currentUser.ordersEnabled === false) return { success: false, message: 'تم إيقاف استقبال الطلبات لهذا الحساب. تواصل مع إدارة المتجر.' };
       try {
         var row = {
           id: 'ORD-' + Date.now(),
@@ -370,7 +521,10 @@
           status: 'PENDING',
         };
         var result = await requireClient().from('orders').insert(row).select('*').single();
-        if (result.error) return asError(result.error);
+        if (result.error) {
+          if (result.error.code === '42501') return { success: false, message: 'تم إيقاف استقبال الطلبات لهذا الحساب. تواصل مع إدارة المتجر.' };
+          return asError(result.error);
+        }
         var saved = orderFromRow(result.data);
         cache.orders.unshift(saved);
         return { success: true, order: saved };

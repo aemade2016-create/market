@@ -10,6 +10,7 @@ const DB = (function () {
     ADMINS:         'sm_admins',
     STORE_SETTINGS: 'sm_store_settings',
     PRODUCTS:       'sm_products',
+    CATEGORIES:     'sm_categories',
     ORDERS:         'sm_orders',
     CURRENT_USER:   'sm_current_user',
     CART:           'sm_cart',
@@ -70,6 +71,13 @@ const DB = (function () {
     if (!read(TABLES.ADMINS))   write(TABLES.ADMINS,   DEFAULT_ADMINS);
     if (!read(TABLES.STORE_SETTINGS)) write(TABLES.STORE_SETTINGS, DEFAULT_SETTINGS);
     if (!read(TABLES.PRODUCTS)) write(TABLES.PRODUCTS, DEFAULT_PRODUCTS);
+    if (!read(TABLES.CATEGORIES)) {
+      var categories = [];
+      (read(TABLES.PRODUCTS) || []).forEach(function (product) {
+        if (product.category && categories.indexOf(product.category) === -1) categories.push(product.category);
+      });
+      write(TABLES.CATEGORIES, categories);
+    }
     if (!read(TABLES.USERS))    write(TABLES.USERS,    []);
     if (!read(TABLES.ORDERS))   write(TABLES.ORDERS,   []);
   }
@@ -133,14 +141,49 @@ const DB = (function () {
     },
   };
 
+  // ── Categories ───────────────────────────────────────────────────
+  var Categories = {
+    getAll: function() { return read(TABLES.CATEGORIES) || []; },
+    add: function(name) {
+      var normalized = String(name || '').trim();
+      var list = this.getAll();
+      if (!normalized) return { success:false, message:'اكتب اسم القسم.' };
+      if (list.some(function(category) { return category.toLowerCase() === normalized.toLowerCase(); })) {
+        return { success:false, message:'هذا القسم موجود بالفعل.' };
+      }
+      list.push(normalized);
+      write(TABLES.CATEGORIES, list);
+      return { success:true, category:normalized };
+    },
+    rename: function(oldName, newName) {
+      var normalized = String(newName || '').trim();
+      var list = this.getAll();
+      if (!normalized || normalized.length > 80) return { success:false, message:'اسم القسم مطلوب ويجب ألا يتجاوز 80 حرفاً.' };
+      if (list.indexOf(oldName) === -1) return { success:false, message:'القسم غير موجود.' };
+      if (normalized !== oldName && list.some(function(category) { return category.toLowerCase() === normalized.toLowerCase(); })) {
+        return { success:false, message:'هذا القسم موجود بالفعل.' };
+      }
+      write(TABLES.CATEGORIES, list.map(function(category) { return category === oldName ? normalized : category; }));
+      write(TABLES.PRODUCTS, Products.getAll().map(function(product) {
+        return product.category === oldName ? Object.assign({}, product, { category: normalized }) : product;
+      }));
+      return { success:true, category:normalized };
+    },
+    remove: function(name) {
+      if (Products.getAll().some(function(product) { return product.category === name; })) {
+        return { success:false, message:'لا يمكن حذف قسم مرتبط بمنتجات.' };
+      }
+      write(TABLES.CATEGORIES, this.getAll().filter(function(category) { return category !== name; }));
+      return { success:true };
+    },
+  };
+
   // ── Products ──────────────────────────────────────────────────────
   var Products = {
     getAll: function() { return read(TABLES.PRODUCTS) || []; },
     findById: function(id) { return this.getAll().find(function(p){ return p.id === id; }) || null; },
     getCategories: function() {
-      var cats = [];
-      this.getAll().forEach(function(p){ if (cats.indexOf(p.category) === -1) cats.push(p.category); });
-      return cats;
+      return Categories.getAll();
     },
     getByCategory: function(cat) { return this.getAll().filter(function(p){ return p.category === cat; }); },
     search: function(q) {
@@ -266,6 +309,7 @@ const DB = (function () {
     Admins: Admins,
     Settings: Settings,
     Products: Products,
+    Categories: Categories,
     Orders: Orders,
     Session: Session,
     Cart: Cart,

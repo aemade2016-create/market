@@ -14,8 +14,6 @@
     .line-clamp-2 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
     .skeleton { background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%); background-size:200% 100%; animation:sk 1.4s infinite; }
     @keyframes sk { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-    #category-pills { scrollbar-width:none; -ms-overflow-style:none; }
-    #category-pills::-webkit-scrollbar { display:none; }
   </style>
 </head>
 <body class="overflow-x-clip bg-gray-50 text-gray-900">
@@ -61,18 +59,18 @@
   <!-- Category Pills -->
   <div class="bg-white border-b border-gray-100 sticky top-16 z-40 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6">
-      <div id="category-pills" class="flex gap-2 py-3 overflow-x-auto">
-        <div class="skeleton h-9 w-20 rounded-full flex-shrink-0"></div>
-        <div class="skeleton h-9 w-28 rounded-full flex-shrink-0"></div>
-        <div class="skeleton h-9 w-24 rounded-full flex-shrink-0"></div>
-        <div class="skeleton h-9 w-32 rounded-full flex-shrink-0"></div>
+      <div id="category-pills" class="grid grid-cols-4 gap-2 py-3 sm:flex sm:flex-wrap">
+        <div class="skeleton h-10 w-full rounded-xl sm:h-9 sm:w-20"></div>
+        <div class="skeleton h-10 w-full rounded-xl sm:h-9 sm:w-28"></div>
+        <div class="skeleton h-10 w-full rounded-xl sm:h-9 sm:w-24"></div>
+        <div class="skeleton h-10 w-full rounded-xl sm:h-9 sm:w-32"></div>
       </div>
     </div>
   </div>
 
   <!-- Products -->
   <main class="mx-auto w-full min-w-0 max-w-7xl px-4 py-8 sm:px-6">
-    <div id="storefront-container" class="grid min-w-0 grid-cols-1 gap-4 min-[400px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+    <div id="storefront-container" class="grid min-w-0 grid-cols-1 gap-4 min-[400px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
       <!-- skeleton يُنشأ بـ JS -->
     </div>
   </main>

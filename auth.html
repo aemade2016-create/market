@@ -55,10 +55,10 @@
         </form>
         <div class="flex items-center gap-3 my-5"><hr class="flex-1 border-gray-200"/><span class="text-xs text-gray-400">أو تابع بـ</span><hr class="flex-1 border-gray-200"/></div>
         <div class="grid grid-cols-2 gap-3">
-          <button onclick="handleSocialLogin('google')" class="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white py-3 text-sm font-medium text-gray-700 hover:bg-gray-50">
+          <button id="google-login" type="button" onclick="handleSocialLogin('google')" class="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white py-3 text-sm font-medium text-gray-700 hover:bg-gray-50">
             <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google"/> Google
           </button>
-          <button onclick="handleSocialLogin('facebook')" class="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white py-3 text-sm font-medium text-gray-700 hover:bg-gray-50">
+          <button id="facebook-login" type="button" onclick="handleSocialLogin('facebook')" class="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white py-3 text-sm font-medium text-gray-700 hover:bg-gray-50">
             <img src="https://www.svgrepo.com/show/448224/facebook.svg" class="w-5 h-5" alt="Facebook"/> Facebook
           </button>
         </div>
