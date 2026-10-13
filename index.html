@@ -118,12 +118,27 @@
   <script src="js/storefront.js"></script>
   <script>
     (async function () {
+    var initializationTimeout;
     try {
-      await DB.init();
+      await Promise.race([
+        DB.init(),
+        new Promise(function (_, reject) {
+          initializationTimeout = window.setTimeout(function () {
+            reject(new Error('انتهت مهلة الاتصال بقاعدة البيانات.'));
+          }, 15000);
+        }),
+      ]);
     } catch (error) {
       console.error('[Storefront] Supabase initialization failed:', error);
-      document.getElementById('storefront-container').innerHTML = '<p class="col-span-full py-12 text-center text-red-600">تعذر تحميل المتجر. تحقق من إعداد قاعدة البيانات ثم أعد المحاولة.</p>';
+      document.getElementById('category-pills').innerHTML = '<p class="py-3 text-center text-sm text-red-600">تعذر الاتصال بالمتجر.</p>';
+      document.getElementById('storefront-container').innerHTML =
+        '<div class="col-span-full py-12 text-center" role="alert">' +
+          '<p class="text-red-600">تعذر تحميل المتجر. تحقق من الاتصال بالإنترنت ثم أعد المحاولة.</p>' +
+          '<button type="button" onclick="window.location.reload()" class="mt-4 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">إعادة المحاولة</button>' +
+        '</div>';
       return;
+    } finally {
+      window.clearTimeout(initializationTimeout);
     }
 
     var settings = DB.Settings.get();
