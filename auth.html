@@ -37,8 +37,8 @@
         <p class="text-gray-500 text-sm mb-7">سجّل دخولك للمتابعة</p>
         <form id="login-form" novalidate class="space-y-4">
           <div class="relative">
-            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-regular fa-envelope fa-sm"></i></span>
-            <input id="login-email" type="email" placeholder="البريد الإلكتروني" class="form-input pr-10" autocomplete="email"/>
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-regular fa-user fa-sm"></i></span>
+            <input id="login-username" type="text" placeholder="اسم المستخدم" class="form-input pr-10" autocomplete="username"/>
           </div>
           <div class="relative">
             <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-solid fa-lock fa-sm"></i></span>
@@ -70,12 +70,13 @@
         <h2 class="text-2xl font-bold text-gray-800 mb-1">إنشاء حساب جديد ✨</h2>
         <p class="text-gray-500 text-sm mb-7">انضم إلينا وتسوّق بكل سهولة</p>
         <form id="register-form" novalidate class="space-y-4">
-          <div class="grid grid-cols-1 min-[380px]:grid-cols-2 gap-3">
-            <div class="relative">
-              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-regular fa-user fa-sm"></i></span>
-              <input id="reg-first" type="text" placeholder="الاسم الأول" class="form-input pr-10" autocomplete="given-name"/>
-            </div>
-            <input id="reg-last" type="text" placeholder="الاسم الأخير" class="form-input" autocomplete="family-name"/>
+          <div class="relative">
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-regular fa-user fa-sm"></i></span>
+            <input id="reg-name" type="text" placeholder="الاسم" class="form-input pr-10" autocomplete="name"/>
+          </div>
+          <div class="relative">
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-solid fa-at fa-sm"></i></span>
+            <input id="reg-username" type="text" placeholder="اسم المستخدم" class="form-input pr-10" autocomplete="username"/>
           </div>
           <div class="relative">
             <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-regular fa-envelope fa-sm"></i></span>

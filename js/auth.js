@@ -4,20 +4,27 @@
 // ════════════════════════════════════════════════════════════════════
 
 var Auth = (function () {
+  var socialAuthDetected = false;
 
   function errorMessage(error) {
     var message = error && error.message ? error.message : '';
-    if (/invalid login credentials/i.test(message)) return 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+    if (/invalid login credentials/i.test(message)) return 'اسم المستخدم أو كلمة المرور غير صحيحة.';
     if (/email not confirmed/i.test(message)) return 'يرجى تأكيد بريدك الإلكتروني قبل تسجيل الدخول.';
     if (/user already registered/i.test(message)) return 'هذا البريد الإلكتروني مسجّل بالفعل.';
+    if (/users_username_lower_idx|duplicate key/i.test(message)) return 'اسم المستخدم مسجّل بالفعل.';
     return message || 'تعذر إتمام العملية. حاول مرة أخرى.';
   }
 
-  async function login(email, password) {
-    if (!email || !password) return { success: false, message: 'يرجى إدخال البريد الإلكتروني وكلمة المرور.' };
+  async function login(username, password) {
+    if (!username || !password) return { success: false, message: 'يرجى إدخال اسم المستخدم وكلمة المرور.' };
     try {
+      var lookup = await window.supabaseClient.rpc('email_for_username', {
+        requested_username: username.trim().toLowerCase(),
+      });
+      if (lookup.error) return { success: false, message: errorMessage(lookup.error) };
+      if (!lookup.data) return { success: false, message: 'اسم المستخدم أو كلمة المرور غير صحيحة.' };
       var result = await window.supabaseClient.auth.signInWithPassword({
-        email: email.toLowerCase().trim(),
+        email: lookup.data,
         password: password,
       });
       if (result.error) return { success: false, message: errorMessage(result.error) };
@@ -49,12 +56,13 @@ var Auth = (function () {
   }
 
   async function register(data) {
-    var firstName = data.firstName;
-    var lastName = data.lastName;
+    var fullName = String(data.fullName || [data.firstName, data.lastName].filter(Boolean).join(' ') || '').trim();
+    var username = String(data.username || '').trim().toLowerCase();
     var email = data.email;
     var password = data.password;
     var confirmPassword = data.confirmPassword;
-    if (!firstName || !lastName || !email || !password || !confirmPassword) return { success: false, message: 'يرجى ملء جميع الحقول المطلوبة.' };
+    if (!fullName || !username || !email || !password || !confirmPassword) return { success: false, message: 'يرجى ملء جميع الحقول المطلوبة.' };
+    if (!/^[a-z0-9_.-]{3,30}$/.test(username)) return { success: false, message: 'اسم المستخدم يجب أن يتكون من 3 إلى 30 حرفاً إنجليزياً أو رقماً أو (._-).' };
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { success: false, message: 'يرجى إدخال بريد إلكتروني صحيح.' };
     if (password !== confirmPassword) return { success: false, message: 'كلمتا المرور غير متطابقتين.' };
     if (password.length < 6) return { success: false, message: 'يجب أن تكون كلمة المرور 6 أحرف على الأقل.' };
@@ -63,7 +71,7 @@ var Auth = (function () {
       var result = await window.supabaseClient.auth.signUp({
         email: email.toLowerCase().trim(),
         password: password,
-        options: { data: { first_name: firstName.trim(), last_name: lastName.trim() } },
+        options: { data: { first_name: fullName, last_name: '', full_name: fullName, username: username } },
       });
       if (result.error) return { success: false, message: errorMessage(result.error) };
       if (!result.data.session) {
@@ -101,7 +109,7 @@ var Auth = (function () {
   }
 
   function redirectIfLoggedIn() {
-    if (isLoggedIn()) window.location.href = isAdmin() ? 'admin.html' : 'index.html';
+    if (isLoggedIn()) window.location.href = socialAuthDetected || !isAdmin() ? 'index.html' : 'admin.html';
   }
 
   async function requestPasswordReset(email) {
@@ -138,6 +146,20 @@ var Auth = (function () {
     } catch (error) {
       return { success: false, message: errorMessage(error) };
     }
+  }
+
+  function isSocialUser(user) {
+    var provider = user && user.app_metadata && user.app_metadata.provider;
+    return provider === 'google' || provider === 'facebook';
+  }
+
+  if (window.supabaseClient && window.supabaseClient.auth && window.supabaseClient.auth.onAuthStateChange) {
+    window.supabaseClient.auth.onAuthStateChange(function (event, session) {
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session && isSocialUser(session.user)) {
+        socialAuthDetected = true;
+        window.location.href = 'index.html';
+      }
+    });
   }
 
   return { login: login, loginWithOAuth: loginWithOAuth, register: register, logout: logout, getCurrentUser: getCurrentUser, isLoggedIn: isLoggedIn, isAdmin: isAdmin, requireAuth: requireAuth, requireAdmin: requireAdmin, redirectIfLoggedIn: redirectIfLoggedIn, requestPasswordReset: requestPasswordReset, updatePassword: updatePassword, changePassword: changePassword };

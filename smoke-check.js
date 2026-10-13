@@ -2,8 +2,11 @@ const fs = require('fs');
 const vm = require('vm');
 
 const users = new Map([['admin@example.com', { password: 'admin-pass', first_name: 'Store', last_name: 'Admin' }]]);
+const usernames = new Map([['storeadmin', 'admin@example.com']]);
 let activeUser = null;
 let resetEmail = null;
+let authStateListener = null;
+const oauthProviders = [];
 
 const supabaseClient = {
   auth: {
@@ -11,6 +14,7 @@ const supabaseClient = {
       if (users.has(email)) return { data: {}, error: { message: 'User already registered' } };
       const user = { id: 'user-' + users.size, email, user_metadata: options.data };
       users.set(email, { password, first_name: options.data.first_name, last_name: options.data.last_name });
+      usernames.set(options.data.username, email);
       activeUser = user;
       return { data: { user, session: { user } }, error: null };
     },
@@ -27,6 +31,12 @@ const supabaseClient = {
       return { data: { user: activeUser }, error: null };
     },
     async signOut() { activeUser = null; return { error: null }; },
+    async signInWithOAuth({ provider }) { oauthProviders.push(provider); return { data: { provider }, error: null }; },
+    onAuthStateChange(callback) { authStateListener = callback; return { data: { subscription: { unsubscribe() {} } } }; },
+  },
+  async rpc(name, args) {
+    if (name !== 'email_for_username') return { data: null, error: { message: 'Unknown RPC' } };
+    return { data: usernames.get(args.requested_username) || null, error: null };
   },
 };
 
@@ -55,17 +65,24 @@ vm.runInContext(fs.readFileSync('js/auth.js', 'utf8'), context, { filename: 'js/
 
 async function run() {
   const auth = context.Auth;
-  const registration = await auth.register({ firstName: 'Test', lastName: 'Customer', email: 'customer@example.com', password: 'new-pass', confirmPassword: 'new-pass' });
+  const registration = await auth.register({ fullName: 'Test Customer', username: 'test.customer', email: 'customer@example.com', password: 'new-pass', confirmPassword: 'new-pass' });
   if (!registration.success || registration.requiresConfirmation) throw new Error('Supabase signup failed');
 
-  const duplicate = await auth.register({ firstName: 'Test', lastName: 'Customer', email: 'customer@example.com', password: 'new-pass', confirmPassword: 'new-pass' });
+  const duplicate = await auth.register({ fullName: 'Test Customer', username: 'test.customer', email: 'customer@example.com', password: 'new-pass', confirmPassword: 'new-pass' });
   if (duplicate.success) throw new Error('Duplicate signup unexpectedly succeeded');
 
-  const invalidLogin = await auth.login('customer@example.com', 'wrong');
+  const invalidLogin = await auth.login('test.customer', 'wrong');
   if (invalidLogin.success) throw new Error('Invalid login unexpectedly succeeded');
 
-  const login = await auth.login('customer@example.com', 'new-pass');
+  const login = await auth.login('test.customer', 'new-pass');
   if (!login.success || login.isAdmin) throw new Error('Customer login failed');
+
+  const socialLogin = await auth.loginWithOAuth('google');
+  if (!socialLogin.success) throw new Error('Google OAuth did not start');
+  const facebookLogin = await auth.loginWithOAuth('facebook');
+  if (!facebookLogin.success || oauthProviders.join(',') !== 'google,facebook') throw new Error('Google and Facebook OAuth providers were not requested');
+  authStateListener('SIGNED_IN', { user: { app_metadata: { provider: 'facebook' } } });
+  if (context.window.location.href !== 'index.html') throw new Error('OAuth sign-in did not redirect to the storefront');
 
   const reset = await auth.requestPasswordReset('customer@example.com');
   if (!reset.success || resetEmail !== 'customer@example.com') throw new Error('Password reset request failed');
@@ -76,7 +93,7 @@ async function run() {
   const changedPassword = await auth.changePassword('new-pass', 'updated-pass');
   if (!changedPassword.success) throw new Error('Password update failed');
 
-  const adminLogin = await auth.login('admin@example.com', 'admin-pass');
+  const adminLogin = await auth.login('storeadmin', 'admin-pass');
   if (!adminLogin.success || !adminLogin.isAdmin) throw new Error('Admin login failed');
 
   console.log('SMOKE_TEST_OK');

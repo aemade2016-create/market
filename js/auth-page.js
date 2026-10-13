@@ -111,11 +111,11 @@ document.addEventListener('DOMContentLoaded', async function () {
   document.getElementById('login-form').addEventListener('submit', async function (e) {
     e.preventDefault();
     hideError('login-error');
-    var email = document.getElementById('login-email').value.trim();
+    var username = document.getElementById('login-username').value.trim();
     var pass  = document.getElementById('login-password').value;
     var btn   = this.querySelector('button[type="submit"]');
     setLoading(btn, true);
-    var result = await Auth.login(email, pass);
+    var result = await Auth.login(username, pass);
     setLoading(btn, false, '<i class="fa-solid fa-right-to-bracket"></i> تسجيل الدخول');
     if (!result.success) { showError('login-error', result.message); UI.shake(document.getElementById('login-form')); return; }
     UI.showToast('أهلاً بك' + (result.user.firstName ? '، ' + result.user.firstName : '') + '! ✨', 'success');
@@ -127,8 +127,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     e.preventDefault();
     hideError('register-error');
     var data = {
-      firstName: document.getElementById('reg-first').value.trim(),
-      lastName:  document.getElementById('reg-last').value.trim(),
+      fullName:  document.getElementById('reg-name').value.trim(),
+      username:  document.getElementById('reg-username').value.trim(),
       email:     document.getElementById('reg-email').value.trim(),
       password:  document.getElementById('reg-password').value,
       confirmPassword: document.getElementById('reg-confirm').value,

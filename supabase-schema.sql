@@ -19,6 +19,18 @@ create table if not exists public.profiles (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.users (
+  id uuid primary key references auth.users(id) on delete cascade,
+  email text not null unique,
+  username text,
+  full_name text not null default '',
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists users_username_lower_idx
+  on public.users (lower(username))
+  where username is not null;
+
 alter table public.profiles
   add column if not exists orders_enabled boolean not null default true;
 
@@ -155,6 +167,18 @@ security definer
 set search_path = ''
 as $$
 begin
+  insert into public.users (id, email, username, full_name)
+  values (
+    new.id,
+    lower(new.email),
+    nullif(lower(btrim(new.raw_user_meta_data ->> 'username')), ''),
+    coalesce(new.raw_user_meta_data ->> 'full_name', new.raw_user_meta_data ->> 'name', '')
+  )
+  on conflict (id) do update set
+    email = excluded.email,
+    username = coalesce(public.users.username, excluded.username),
+    full_name = coalesce(nullif(public.users.full_name, ''), excluded.full_name);
+
   insert into public.profiles (id, email, first_name, last_name)
   values (
     new.id,
@@ -235,14 +259,32 @@ revoke all on function public.admin_manage_user(text, boolean) from public, anon
 grant execute on function public.admin_list_emails() to authenticated;
 grant execute on function public.admin_manage_user(text, boolean) to authenticated;
 
+create or replace function public.email_for_username(requested_username text)
+returns text
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select users.email
+  from public.users as users
+  where lower(users.username) = lower(btrim(requested_username))
+  limit 1;
+$$;
+
+revoke all on function public.email_for_username(text) from public, anon, authenticated;
+grant execute on function public.email_for_username(text) to anon, authenticated;
+
 alter table public.products enable row level security;
 alter table public.orders enable row level security;
 alter table public.store_settings enable row level security;
 alter table public.admin_users enable row level security;
 alter table public.profiles enable row level security;
+alter table public.users enable row level security;
 alter table public.store_categories enable row level security;
 
 grant select, insert, update on public.profiles to authenticated;
+revoke all on table public.users from anon, authenticated;
 
 drop policy if exists "Users read own profile and admins read all" on public.profiles;
 create policy "Users read own profile and admins read all"
