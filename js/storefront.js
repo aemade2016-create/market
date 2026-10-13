@@ -60,6 +60,9 @@ var Storefront = (function () {
       console.error('[Storefront] Products container #storefront-container was not found.');
       return;
     }
+    container.innerHTML = '';
+    var skeleton = document.getElementById('skeleton-loader');
+    if (skeleton) skeleton.style.display = 'none';
 
     try {
       var list = products;
@@ -67,6 +70,7 @@ var Storefront = (function () {
         list = activeCategory === 'all' ? DB.Products.getAll() : DB.Products.getByCategory(activeCategory);
       }
       if (!Array.isArray(list)) throw new TypeError('Products data must be an array.');
+      console.log('First Product:', list[0]);
 
       list = list.map(function (product) {
         product = product || {};
@@ -90,28 +94,7 @@ var Storefront = (function () {
         return;
       }
 
-      // تجميع حسب القسم
-      var grouped = {};
-      var order   = [];
-      list.forEach(function (p) {
-        if (!grouped[p.category]) { grouped[p.category] = []; order.push(p.category); }
-        grouped[p.category].push(p);
-      });
-
-      container.innerHTML = order.map(function (cat) {
-        var items = grouped[cat];
-        return '<section class="col-span-full mb-8" id="cat-' + encodeURIComponent(cat) + '">' +
-          '<div class="flex items-center gap-3 mb-4">' +
-            '<div class="flex items-center gap-2"><span class="text-2xl">' + (ICONS[cat] || '🛒') + '</span>' +
-              '<h2 class="text-xl font-extrabold text-gray-800">' + escapeHtml(cat) + '</h2></div>' +
-            '<div class="flex-1 h-px bg-gradient-to-l from-transparent to-gray-200"></div>' +
-            '<span class="text-xs text-gray-400 font-medium bg-gray-100 px-2.5 py-1 rounded-full">' + items.length + ' منتج</span>' +
-          '</div>' +
-          '<div class="grid min-w-0 grid-cols-1 gap-3 min-[400px]:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">' +
-            items.map(buildCard).join('') +
-          '</div>' +
-        '</section>';
-      }).join('');
+      container.innerHTML = list.map(buildCard).join('');
     } catch (err) {
       console.error('Render Error:', err);
       container.innerHTML =
