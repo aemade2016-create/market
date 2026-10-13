@@ -87,7 +87,7 @@ var Auth = (function () {
   async function logout(redirectTo) {
     try { await window.supabaseClient.auth.signOut(); } catch (error) { console.error('[Auth] sign out failed:', error); }
     DB.Session.clear();
-    window.location.href = redirectTo || 'auth.html';
+    window.location.href = redirectTo || './auth.html';
   }
 
   function getCurrentUser() { return DB.Session.get(); }
@@ -98,18 +98,18 @@ var Auth = (function () {
   }
 
   function requireAuth(redirectTo) {
-    if (!isLoggedIn()) { window.location.href = redirectTo || 'auth.html'; return false; }
+    if (!isLoggedIn()) { window.location.href = redirectTo || './auth.html'; return false; }
     return true;
   }
 
   function requireAdmin(redirectTo) {
-    if (!isLoggedIn()) { window.location.href = 'auth.html'; return false; }
-    if (!isAdmin()) { window.location.href = redirectTo || 'index.html'; return false; }
+    if (!isLoggedIn()) { window.location.href = './auth.html'; return false; }
+    if (!isAdmin()) { window.location.href = redirectTo || './index.html'; return false; }
     return true;
   }
 
   function redirectIfLoggedIn() {
-    if (isLoggedIn()) window.location.href = socialAuthDetected || !isAdmin() ? 'index.html' : 'admin.html';
+    if (isLoggedIn()) window.location.href = socialAuthDetected || !isAdmin() ? './index.html' : './admin.html';
   }
 
   async function requestPasswordReset(email) {
@@ -157,7 +157,7 @@ var Auth = (function () {
     window.supabaseClient.auth.onAuthStateChange(function (event, session) {
       if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session && isSocialUser(session.user)) {
         socialAuthDetected = true;
-        window.location.href = 'index.html';
+        window.location.href = './index.html';
       }
     });
   }

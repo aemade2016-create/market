@@ -13,7 +13,7 @@ var Checkout = (function () {
         title:'تسجيل الدخول مطلوب',
         message:'يجب تسجيل الدخول أولاً لإتمام الطلب. هل تريد التسجيل الآن؟',
         confirmText:'نعم، سجّل الدخول', cancelText:'إلغاء', type:'info',
-        onConfirm: function () { window.location.href = 'auth.html'; },
+        onConfirm: function () { window.location.href = './auth.html'; },
       });
       return;
     }
@@ -194,7 +194,7 @@ var Checkout = (function () {
         '<p class="text-gray-500 text-sm mb-6 leading-relaxed">' + (popupBlocked ? 'تم حفظ الطلب، لكن المتصفح منع فتح واتساب تلقائيًا. افتح الرسالة واضغط إرسال لإتمام الطلب.' : 'تم حفظ الطلب وفتح رسالة المتجر على واتساب. اضغط إرسال داخل واتساب لإتمام الطلب.') + '</p>' +
         '<div class="space-y-2">' +
           '<a href="' + waURL + '" target="_blank" rel="noopener noreferrer" class="block w-full rounded-xl bg-green-600 py-3 text-white font-bold text-sm hover:bg-green-700"><i class="fa-brands fa-whatsapp ml-1"></i> ' + (popupBlocked ? 'فتح واتساب وإرسال الطلب' : 'إعادة فتح رسالة واتساب') + '</a>' +
-          '<a href="profile.html" class="block w-full rounded-xl bg-green-600 py-3 text-white font-bold text-sm hover:bg-green-700"><i class="fa-solid fa-list-check ml-1"></i> عرض طلباتي</a>' +
+          '<a href="./profile.html" class="block w-full rounded-xl bg-green-600 py-3 text-white font-bold text-sm hover:bg-green-700"><i class="fa-solid fa-list-check ml-1"></i> عرض طلباتي</a>' +
           '<button onclick="this.closest(\'.fixed\').remove();document.body.style.overflow=\'\';" class="block w-full rounded-xl border border-gray-200 py-3 text-gray-600 text-sm hover:bg-gray-50">متابعة التسوق</button>' +
         '</div>' +
       '</div>';

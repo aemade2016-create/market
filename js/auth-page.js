@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     setLoading(btn, false, '<i class="fa-solid fa-right-to-bracket"></i> تسجيل الدخول');
     if (!result.success) { showError('login-error', result.message); UI.shake(document.getElementById('login-form')); return; }
     UI.showToast('أهلاً بك' + (result.user.firstName ? '، ' + result.user.firstName : '') + '! ✨', 'success');
-    setTimeout(function () { window.location.href = result.isAdmin ? 'admin.html' : 'index.html'; }, 500);
+    setTimeout(function () { window.location.href = result.isAdmin ? './admin.html' : './index.html'; }, 500);
   });
 
   // ── إنشاء حساب ───────────────────────────────────────────────────
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       return;
     }
     UI.showToast('تم إنشاء حسابك بنجاح! يسعدنا انضمامك 🎉', 'success');
-    setTimeout(function () { window.location.href = 'index.html'; }, 500);
+    setTimeout(function () { window.location.href = './index.html'; }, 500);
   });
 
   // ── نسيان كلمة المرور ────────────────────────────────────────────
@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         return;
       }
       UI.showToast('تم تحديث كلمة المرور بنجاح', 'success');
-      setTimeout(function () { window.location.href = 'index.html'; }, 500);
+      setTimeout(function () { window.location.href = './index.html'; }, 500);
       return;
     }
     var email = document.getElementById('reset-email').value.trim();

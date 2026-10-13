@@ -82,7 +82,7 @@ async function run() {
   const facebookLogin = await auth.loginWithOAuth('facebook');
   if (!facebookLogin.success || oauthProviders.join(',') !== 'google,facebook') throw new Error('Google and Facebook OAuth providers were not requested');
   authStateListener('SIGNED_IN', { user: { app_metadata: { provider: 'facebook' } } });
-  if (context.window.location.href !== 'index.html') throw new Error('OAuth sign-in did not redirect to the storefront');
+  if (context.window.location.href !== './index.html') throw new Error('OAuth sign-in did not redirect to the storefront');
 
   const reset = await auth.requestPasswordReset('customer@example.com');
   if (!reset.success || resetEmail !== 'customer@example.com') throw new Error('Password reset request failed');
