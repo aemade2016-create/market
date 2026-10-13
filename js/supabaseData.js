@@ -245,19 +245,27 @@
     return true;
   }
 
-  async function syncSession() {
-    var sessionResult = await requireClient().auth.getSession();
-    if (sessionResult.error) throw sessionResult.error;
-    var authUser = sessionResult.data.session ? sessionResult.data.session.user : null;
+  async function syncSession(options) {
+    options = options || {};
+    var authUser = options.user || null;
+    if (!authUser) {
+      var sessionResult = await requireClient().auth.getSession();
+      if (sessionResult.error) throw sessionResult.error;
+      authUser = sessionResult.data.session ? sessionResult.data.session.user : null;
+    }
 
     currentUser = null;
     isAdmin = false;
     if (authUser) {
-      var adminResult = await client.rpc('is_store_admin');
+      var results = await Promise.all([
+        client.rpc('is_store_admin'),
+        client.from('profiles').select('*').eq('id', authUser.id).maybeSingle(),
+      ]);
+      var adminResult = results[0];
       if (adminResult.error) throw adminResult.error;
       isAdmin = adminResult.data === true;
 
-      var profileResult = await client.from('profiles').select('*').eq('id', authUser.id).maybeSingle();
+      var profileResult = results[1];
       if (profileResult.error) throw profileResult.error;
       var profile = profileFromRow(profileResult.data) || {};
       currentUser = Object.assign({}, profile, {
@@ -270,7 +278,7 @@
     }
 
     DB.Session.set(currentUser);
-    await refresh();
+    if (!options.skipRefresh) await refresh();
     return currentUser;
   }
 

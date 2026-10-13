@@ -28,7 +28,7 @@ var Auth = (function () {
         password: password,
       });
       if (result.error) return { success: false, message: errorMessage(result.error) };
-      var user = await DB.syncSession();
+      var user = await DB.syncSession({ user: result.data.user, skipRefresh: true });
       return { success: true, user: user, isAdmin: DB.Admins.isAdmin(user.email) };
     } catch (error) {
       return { success: false, message: errorMessage(error) };
@@ -77,7 +77,7 @@ var Auth = (function () {
       if (!result.data.session) {
         return { success: true, requiresConfirmation: true, message: 'تم إنشاء الحساب. راجع بريدك الإلكتروني لتأكيده قبل تسجيل الدخول.' };
       }
-      var user = await DB.syncSession();
+      var user = await DB.syncSession({ user: result.data.user, skipRefresh: true });
       return { success: true, user: user, requiresConfirmation: false };
     } catch (error) {
       return { success: false, message: errorMessage(error) };
