@@ -61,8 +61,6 @@ var Storefront = (function () {
       return;
     }
     container.innerHTML = '';
-    var skeleton = document.getElementById('skeleton-loader');
-    if (skeleton) skeleton.style.display = 'none';
 
     try {
       var list = products;
@@ -102,6 +100,29 @@ var Storefront = (function () {
           '<p class="font-semibold text-red-600">تعذر عرض المنتجات.</p>' +
           '<p class="mt-2 text-sm text-gray-600">أعد تحميل الصفحة للمحاولة مرة أخرى.</p>' +
         '</div>';
+    }
+  }
+
+  async function fetchAndRenderProducts() {
+    var container = document.getElementById('storefront-container');
+    if (!container) {
+      console.error('[Storefront] Products container #storefront-container was not found.');
+      return;
+    }
+
+    container.innerHTML = '';
+    try {
+      if (!window.supabaseClient) throw new Error('تعذر الاتصال بـ Supabase.');
+
+      var result = await window.supabaseClient.from('products').select('*');
+      if (result.error) throw result.error;
+      if (!Array.isArray(result.data)) throw new Error('لم تُرجع قاعدة البيانات قائمة منتجات صالحة.');
+
+      render(result.data);
+    } catch (error) {
+      console.error('[Storefront] Failed to fetch or render products:', error);
+      container.innerHTML = '<p class="text-red-500 text-center">حدث خطأ أثناء تحميل المنتجات: ' +
+        escapeHtml(error && error.message ? error.message : String(error)) + '</p>';
     }
   }
 
@@ -184,5 +205,5 @@ var Storefront = (function () {
     CartUI.syncCards();
   }
 
-  return { render, renderPills, filterCat, search, addById, inc, dec };
+  return { fetchAndRenderProducts, render, renderPills, filterCat, search, addById, inc, dec };
 })();
