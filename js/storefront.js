@@ -1,3 +1,5 @@
+console.log('🚀 Main JS File Loaded Successfully!');
+
 // ════════════════════════════════════════════════════════════════════
 // storefront.js — عرض المنتجات والأقسام
 // ════════════════════════════════════════════════════════════════════
@@ -52,8 +54,12 @@ var Storefront = (function () {
   }
 
   function render(products) {
+    console.log('🎨 Rendering started...');
     var container = document.getElementById('storefront-container');
-    if (!container) return;
+    if (!container) {
+      console.error('[Storefront] Products container #storefront-container was not found.');
+      return;
+    }
 
     var list = products;
     if (list === undefined) {

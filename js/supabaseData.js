@@ -123,6 +123,7 @@
       var productsResult = await client.from('products').select('*').order('name', { ascending: true });
       if (productsResult.error) throw productsResult.error;
       cache.products = productsResult.data || [];
+      console.log('📦 Data received from DB:', cache.products);
     } catch (error) {
       console.error('[Supabase] Failed to fetch products from public.products:', {
         message: error && error.message,
