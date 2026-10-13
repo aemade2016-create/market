@@ -61,43 +61,65 @@ var Storefront = (function () {
       return;
     }
 
-    var list = products;
-    if (list === undefined) {
-      list = activeCategory === 'all' ? DB.Products.getAll() : DB.Products.getByCategory(activeCategory);
-    }
+    try {
+      var list = products;
+      if (list === undefined) {
+        list = activeCategory === 'all' ? DB.Products.getAll() : DB.Products.getByCategory(activeCategory);
+      }
+      if (!Array.isArray(list)) throw new TypeError('Products data must be an array.');
 
-    if (!list || list.length === 0) {
+      list = list.map(function (product) {
+        product = product || {};
+        var price = Number(product.price);
+        return Object.assign({}, product, {
+          id: product.id == null ? '' : String(product.id),
+          name: product.name == null ? '' : String(product.name),
+          category: product.category == null ? 'غير مصنف' : String(product.category),
+          price: Number.isFinite(price) ? price : 0,
+          image: String(product.image || product.image_url || ''),
+        });
+      });
+
+      if (list.length === 0) {
+        container.innerHTML =
+          '<div class="col-span-full text-center py-20">' +
+            '<div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-box-open text-gray-300 text-4xl"></i></div>' +
+            '<p class="text-gray-500 font-semibold">لا توجد منتجات مطابقة للبحث</p>' +
+            '<button onclick="Storefront.render()" class="mt-4 text-green-600 font-semibold text-sm hover:underline">عرض جميع المنتجات</button>' +
+          '</div>';
+        return;
+      }
+
+      // تجميع حسب القسم
+      var grouped = {};
+      var order   = [];
+      list.forEach(function (p) {
+        if (!grouped[p.category]) { grouped[p.category] = []; order.push(p.category); }
+        grouped[p.category].push(p);
+      });
+
+      container.innerHTML = order.map(function (cat) {
+        var items = grouped[cat];
+        return '<section class="col-span-full mb-8" id="cat-' + encodeURIComponent(cat) + '">' +
+          '<div class="flex items-center gap-3 mb-4">' +
+            '<div class="flex items-center gap-2"><span class="text-2xl">' + (ICONS[cat] || '🛒') + '</span>' +
+              '<h2 class="text-xl font-extrabold text-gray-800">' + escapeHtml(cat) + '</h2></div>' +
+            '<div class="flex-1 h-px bg-gradient-to-l from-transparent to-gray-200"></div>' +
+            '<span class="text-xs text-gray-400 font-medium bg-gray-100 px-2.5 py-1 rounded-full">' + items.length + ' منتج</span>' +
+          '</div>' +
+          '<div class="grid min-w-0 grid-cols-1 gap-3 min-[400px]:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">' +
+            items.map(buildCard).join('') +
+          '</div>' +
+        '</section>';
+      }).join('');
+    } catch (err) {
+      console.error('Render Error:', err);
       container.innerHTML =
-        '<div class="col-span-full text-center py-20">' +
-          '<div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-box-open text-gray-300 text-4xl"></i></div>' +
-          '<p class="text-gray-500 font-semibold">لا توجد منتجات مطابقة للبحث</p>' +
-          '<button onclick="Storefront.render()" class="mt-4 text-green-600 font-semibold text-sm hover:underline">عرض جميع المنتجات</button>' +
+        '<div class="col-span-full py-12 text-center" role="alert">' +
+          '<p class="font-semibold text-red-600">تعذر عرض المنتجات.</p>' +
+          '<p class="mt-2 text-sm text-gray-600">أعد تحميل الصفحة للمحاولة مرة أخرى.</p>' +
         '</div>';
-      return;
     }
-
-    // تجميع حسب القسم
-    var grouped = {};
-    var order   = [];
-    list.forEach(function (p) {
-      if (!grouped[p.category]) { grouped[p.category] = []; order.push(p.category); }
-      grouped[p.category].push(p);
-    });
-
-    container.innerHTML = order.map(function (cat) {
-      var items = grouped[cat];
-      return '<section class="col-span-full mb-8" id="cat-' + encodeURIComponent(cat) + '">' +
-        '<div class="flex items-center gap-3 mb-4">' +
-          '<div class="flex items-center gap-2"><span class="text-2xl">' + (ICONS[cat] || '🛒') + '</span>' +
-            '<h2 class="text-xl font-extrabold text-gray-800">' + escapeHtml(cat) + '</h2></div>' +
-          '<div class="flex-1 h-px bg-gradient-to-l from-transparent to-gray-200"></div>' +
-          '<span class="text-xs text-gray-400 font-medium bg-gray-100 px-2.5 py-1 rounded-full">' + items.length + ' منتج</span>' +
-        '</div>' +
-        '<div class="grid min-w-0 grid-cols-1 gap-3 min-[400px]:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">' +
-          items.map(buildCard).join('') +
-        '</div>' +
-      '</section>';
-    }).join('');
   }
 
   function renderPills() {
