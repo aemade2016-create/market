@@ -3,6 +3,11 @@
   var projectUrl = 'https://evlvhxhglztyuwutfxda.supabase.co';
   var anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2bHZoeGhnbHp0eXV3dXRmeGRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MDU1MTUsImV4cCI6MjEwNjk4MTUxNX0.SOCv0auISRyT30OCxw-7fNyR9fCQN50KUlH1xBGwJB0';
 
+  if (!projectUrl || !anonKey) {
+    console.error('[Supabase] Missing project URL or anon key in js/supabaseClient.js.');
+    return;
+  }
+
   if (!window.supabase || typeof window.supabase.createClient !== 'function') {
     console.error('[Supabase] supabase-js did not load.');
     return;

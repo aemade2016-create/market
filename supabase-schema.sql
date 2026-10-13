@@ -306,6 +306,7 @@ create policy "Users create own profile"
   with check (id = auth.uid());
 
 -- Products are visible in the public storefront; only admins can change them.
+-- Reminder: verify in the Supabase Dashboard that RLS allows the anon role to SELECT from public.products.
 grant select on public.products to anon, authenticated;
 grant insert, update, delete on public.products to authenticated;
 

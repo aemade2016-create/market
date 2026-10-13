@@ -119,9 +119,20 @@
     if (categoriesResult.error && !cache.categoriesTableMissing) throw categoriesResult.error;
     cache.categories = (categoriesResult.data || []).map(function (category) { return category.name; });
 
-    var productsResult = await client.from('products').select('*').order('name', { ascending: true });
-    if (productsResult.error) throw productsResult.error;
-    cache.products = productsResult.data || [];
+    try {
+      var productsResult = await client.from('products').select('*').order('name', { ascending: true });
+      if (productsResult.error) throw productsResult.error;
+      cache.products = productsResult.data || [];
+    } catch (error) {
+      console.error('[Supabase] Failed to fetch products from public.products:', {
+        message: error && error.message,
+        code: error && error.code,
+        details: error && error.details,
+        hint: error && error.hint,
+        error: error,
+      });
+      throw new Error('فشل الاتصال بقاعدة البيانات أثناء جلب المنتجات: ' + (error && error.message ? error.message : String(error)));
+    }
     if (cache.categoriesTableMissing) {
       cache.categories = cache.products.reduce(function (categories, product) {
         if (product.category && categories.indexOf(product.category) === -1) categories.push(product.category);

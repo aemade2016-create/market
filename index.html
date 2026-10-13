@@ -129,13 +129,21 @@
         }),
       ]);
     } catch (error) {
-      console.error('[Storefront] Supabase initialization failed:', error);
+      console.error('[Storefront] Supabase initialization failed:', {
+        message: error && error.message,
+        code: error && error.code,
+        details: error && error.details,
+        hint: error && error.hint,
+        error: error,
+      });
       document.getElementById('category-pills').innerHTML = '<p class="py-3 text-center text-sm text-red-600">تعذر الاتصال بالمتجر.</p>';
       document.getElementById('storefront-container').innerHTML =
         '<div class="col-span-full py-12 text-center" role="alert">' +
-          '<p class="text-red-600">تعذر تحميل المتجر. تحقق من الاتصال بالإنترنت ثم أعد المحاولة.</p>' +
+          '<p class="font-semibold text-red-600">فشل الاتصال بقاعدة البيانات.</p>' +
+          '<p id="storefront-error-message" class="mx-auto mt-2 max-w-2xl break-words text-sm text-gray-600"></p>' +
           '<button type="button" onclick="window.location.reload()" class="mt-4 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">إعادة المحاولة</button>' +
         '</div>';
+      document.getElementById('storefront-error-message').textContent = error && error.message ? error.message : String(error);
       return;
     } finally {
       window.clearTimeout(initializationTimeout);
