@@ -280,12 +280,14 @@ const DB = (function () {
     get: function() { return read(TABLES.CART) || []; },
     save: function(c) { write(TABLES.CART, c); },
     add: function(product, qty) {
+      if (!Session.isLoggedIn()) return false;
       qty = qty || 1;
       var c = this.get();
       var idx = c.findIndex(function(i){ return i.id === product.id; });
       if (idx !== -1) { c[idx].qty += qty; }
       else { c.push({ id:product.id, name:product.name, price:product.price, image:product.image, qty:qty }); }
       this.save(c);
+      return true;
     },
     updateQty: function(id, qty) {
       var c = this.get();

@@ -160,6 +160,7 @@
     }
 
     if (DB.Session.get() && !(await Onboarding.ensureComplete())) return;
+    if (!DB.Session.get()) DB.Cart.clear();
 
     var settings = DB.Settings.get();
 

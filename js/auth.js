@@ -6,7 +6,7 @@
 var Auth = (function () {
   function errorMessage(error) {
     var message = error && error.message ? error.message : '';
-    if (/invalid login credentials/i.test(message)) return 'اسم المستخدم أو كلمة المرور غير صحيحة.';
+    if (/invalid login credentials/i.test(message)) return 'بيانات الدخول غير صحيحة. تأكد من البريد أو اسم المستخدم وكلمة المرور، أو استخدم «نسيت كلمة المرور؟».';
     if (/email not confirmed/i.test(message)) return 'يرجى تأكيد بريدك الإلكتروني قبل تسجيل الدخول.';
     if (/user already registered/i.test(message)) return 'هذا البريد الإلكتروني مسجّل بالفعل.';
     if (/users_username_lower_idx|duplicate key/i.test(message)) return 'اسم المستخدم مسجّل بالفعل.';
@@ -89,6 +89,7 @@ var Auth = (function () {
 
   async function logout(redirectTo) {
     try { await window.supabaseClient.auth.signOut(); } catch (error) { console.error('[Auth] sign out failed:', error); }
+    DB.Cart.clear();
     DB.Session.clear();
     window.location.href = redirectTo || './auth.html';
   }

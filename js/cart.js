@@ -42,12 +42,28 @@ var CartUI = (function () {
     syncCards();
   }
 
+  function requireLogin() {
+    UI.showConfirm({
+      title: 'تسجيل الدخول مطلوب',
+      message: 'سجّل الدخول أولاً لإضافة المنتجات إلى سلتك.',
+      confirmText: 'تسجيل الدخول',
+      cancelText: 'متابعة التصفح',
+      type: 'info',
+      onConfirm: function () { window.location.href = './auth.html'; },
+    });
+  }
+
   function addToCart(product) {
-    DB.Cart.add(product, 1);
+    if (!Auth.isLoggedIn()) {
+      requireLogin();
+      return false;
+    }
+    if (!DB.Cart.add(product, 1)) return false;
     sync();
     if (product && product.name) {
       UI.showToast('تمت إضافة "' + product.name + '" إلى السلة 🛒', 'success', 2500);
     }
+    return true;
   }
 
   function setSidebarVisible(visible) {
@@ -91,6 +107,10 @@ var CartUI = (function () {
   }
 
   function openCart() {
+    if (!Auth.isLoggedIn()) {
+      requireLogin();
+      return;
+    }
     if (!document.getElementById('cart-sidebar')) {
       initSidebar();
     }
