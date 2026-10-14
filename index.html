@@ -57,7 +57,15 @@
   <!-- Category Pills -->
   <div class="bg-white border-b border-gray-100 sticky top-16 z-40 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6">
-      <div id="category-pills" class="grid grid-cols-4 gap-2 py-3 sm:flex sm:flex-wrap"></div>
+      <div class="flex min-w-0 items-center gap-2 py-2">
+        <button id="category-scroll-right" type="button" onclick="Storefront.scrollCategories('right')" aria-label="عرض الأقسام السابقة" title="عرض الأقسام السابقة" class="hidden h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm hover:border-green-400 hover:text-green-700">
+          <i class="fa-solid fa-chevron-right fa-xs" aria-hidden="true"></i>
+        </button>
+        <div id="category-pills" dir="rtl" class="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto whitespace-nowrap py-1 [scrollbar-width:none]"></div>
+        <button id="category-scroll-left" type="button" onclick="Storefront.scrollCategories('left')" aria-label="عرض الأقسام التالية" title="عرض الأقسام التالية" class="hidden h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm hover:border-green-400 hover:text-green-700">
+          <i class="fa-solid fa-chevron-left fa-xs" aria-hidden="true"></i>
+        </button>
+      </div>
     </div>
   </div>
 

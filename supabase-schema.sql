@@ -51,6 +51,9 @@ create table if not exists public.store_categories (
   created_at timestamptz not null default now()
 );
 
+alter table public.store_categories
+  add column if not exists image_path text;
+
 insert into public.store_categories (name)
 select distinct category
 from public.products
@@ -141,6 +144,38 @@ $$;
 revoke all on function public.is_store_admin() from public, anon;
 grant execute on function public.is_store_admin() to authenticated;
 revoke all on table public.admin_users from anon, authenticated;
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('category-icons', 'category-icons', true, 5242880, array['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
+on conflict (id) do update set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "Public read category icons" on storage.objects;
+create policy "Public read category icons"
+  on storage.objects for select
+  to anon, authenticated
+  using (bucket_id = 'category-icons');
+
+drop policy if exists "Admins upload category icons" on storage.objects;
+create policy "Admins upload category icons"
+  on storage.objects for insert
+  to authenticated
+  with check (bucket_id = 'category-icons' and public.is_store_admin());
+
+drop policy if exists "Admins update category icons" on storage.objects;
+create policy "Admins update category icons"
+  on storage.objects for update
+  to authenticated
+  using (bucket_id = 'category-icons' and public.is_store_admin())
+  with check (bucket_id = 'category-icons' and public.is_store_admin());
+
+drop policy if exists "Admins delete category icons" on storage.objects;
+create policy "Admins delete category icons"
+  on storage.objects for delete
+  to authenticated
+  using (bucket_id = 'category-icons' and public.is_store_admin());
 
 create or replace function public.protect_profile_order_access()
 returns trigger

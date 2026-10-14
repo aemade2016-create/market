@@ -17,6 +17,7 @@
     settings: null,
     products: [],
     categories: [],
+    categoryImagePaths: {},
     categoriesTableMissing: false,
     orders: [],
     profiles: [],
@@ -114,10 +115,14 @@
     if (settingsResult.error) throw settingsResult.error;
     cache.settings = settingsResult.data;
 
-    var categoriesResult = await client.from('store_categories').select('name').order('name', { ascending: true });
+    var categoriesResult = await client.from('store_categories').select('name,image_path').order('name', { ascending: true });
     cache.categoriesTableMissing = isMissingCategoriesTable(categoriesResult.error);
     if (categoriesResult.error && !cache.categoriesTableMissing) throw categoriesResult.error;
     cache.categories = (categoriesResult.data || []).map(function (category) { return category.name; });
+    cache.categoryImagePaths = {};
+    (categoriesResult.data || []).forEach(function (category) {
+      if (category.image_path) cache.categoryImagePaths[category.name] = category.image_path;
+    });
 
     try {
       var productsResult = await client.from('products').select('*').order('name', { ascending: true });
@@ -376,6 +381,33 @@
 
   DB.Categories = {
     getAll: function () { return cache.categories.slice(); },
+    getImage: function (name) {
+      var path = cache.categoryImagePaths[name];
+      return path ? requireClient().storage.from('category-icons').getPublicUrl(path).data.publicUrl : '';
+    },
+    setImage: async function (name, file) {
+      if (!isAdmin) return { success: false, message: 'غير مسموح بإدارة الأقسام.' };
+      if (!file) return { success: false, message: 'اختر صورة للقسم.' };
+      var extensions = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
+      if (!extensions[file.type]) return { success: false, message: 'اختر صورة بصيغة JPG أو PNG أو WebP أو GIF.' };
+      if (file.size > 5242880) return { success: false, message: 'يجب ألا يتجاوز حجم الصورة 5 ميجابايت.' };
+      if (cache.categories.indexOf(name) === -1) return { success: false, message: 'القسم غير موجود.' };
+      var path = (window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2)) + '.' + extensions[file.type];
+      var storage = requireClient().storage.from('category-icons');
+      try {
+        var uploadResult = await storage.upload(path, file, { contentType: file.type, cacheControl: '31536000', upsert: false });
+        if (uploadResult.error) return asError(uploadResult.error);
+        var previousPath = cache.categoryImagePaths[name];
+        var updateResult = await requireClient().from('store_categories').update({ image_path: path }).eq('name', name).select('name,image_path').single();
+        if (updateResult.error) {
+          await storage.remove([path]);
+          return asError(updateResult.error);
+        }
+        cache.categoryImagePaths[name] = updateResult.data.image_path;
+        if (previousPath) await storage.remove([previousPath]);
+        return { success: true, image: this.getImage(name) };
+      } catch (error) { return asError(error); }
+    },
     add: async function (name) {
       if (!isAdmin) return { success: false, message: 'غير مسموح بإدارة الأقسام.' };
       if (cache.categoriesTableMissing) return { success: false, message: missingCategoriesMessage() };
@@ -407,6 +439,10 @@
         }
         cache.categories = cache.categories.map(function (category) { return category === oldName ? result.data.name : category; });
         cache.categories.sort(function (a, b) { return a.localeCompare(b, 'ar'); });
+        if (cache.categoryImagePaths[oldName]) {
+          cache.categoryImagePaths[result.data.name] = cache.categoryImagePaths[oldName];
+          delete cache.categoryImagePaths[oldName];
+        }
         cache.products = cache.products.map(function (product) {
           return product.category === oldName ? Object.assign({}, product, { category: result.data.name }) : product;
         });
@@ -417,6 +453,7 @@
       if (!isAdmin) return { success: false, message: 'غير مسموح بإدارة الأقسام.' };
       if (cache.categoriesTableMissing) return { success: false, message: missingCategoriesMessage() };
       try {
+        var imagePath = cache.categoryImagePaths[name];
         var productsResult = await requireClient().from('products')
           .select('id', { count: 'exact', head: true }).eq('category', name);
         if (productsResult.error) return asError(productsResult.error);
@@ -428,6 +465,8 @@
           return asError(result.error);
         }
         cache.categories = cache.categories.filter(function (category) { return category !== name; });
+        delete cache.categoryImagePaths[name];
+        if (imagePath) await requireClient().storage.from('category-icons').remove([imagePath]);
         return { success: true };
       } catch (error) { return asError(error); }
     },

@@ -131,17 +131,46 @@ var Storefront = (function () {
     var cats = DB.Products.getCategories();
     container.innerHTML =
       '<button type="button" data-cat="all" aria-label="كل الأقسام" title="كل الأقسام" ' +
-        'class="cat-pill flex h-10 w-10 items-center justify-center gap-1.5 rounded-xl border text-sm font-semibold transition-all sm:h-auto sm:w-auto sm:rounded-full sm:px-4 sm:py-2 ' + (activeCategory === 'all' ? 'bg-green-600 text-white border-green-600' : 'bg-white text-gray-600 border-gray-200 hover:border-green-400 hover:text-green-600') + '">' +
+        'class="cat-pill flex h-10 w-10 shrink-0 items-center justify-center gap-1.5 rounded-xl border text-sm font-semibold transition-all sm:h-auto sm:w-auto sm:rounded-full sm:px-4 sm:py-2 ' + (activeCategory === 'all' ? 'bg-green-600 text-white border-green-600' : 'bg-white text-gray-600 border-gray-200 hover:border-green-400 hover:text-green-600') + '">' +
         '<i class="fa-solid fa-border-all fa-xs" aria-hidden="true"></i><span class="hidden sm:inline">الكل</span></button>' +
       cats.map(function (cat) {
         var isActive = activeCategory === cat;
+        var image = DB.Categories.getImage(cat);
+        var icon = image
+          ? '<span class="relative flex h-6 w-6 shrink-0 items-center justify-center"><span aria-hidden="true">' + (ICONS[cat] || '🛒') + '</span><img src="' + escapeHtml(image) + '" alt="" loading="lazy" class="absolute inset-0 h-6 w-6 rounded-full bg-white object-cover" onerror="this.remove()"/></span>'
+          : '<span aria-hidden="true">' + (ICONS[cat] || '🛒') + '</span>';
         return '<button type="button" data-cat="' + escapeHtml(cat) + '" aria-label="' + escapeHtml(cat) + '" title="' + escapeHtml(cat) + '" ' +
-          'class="cat-pill flex h-10 w-10 items-center justify-center gap-1.5 rounded-xl border text-sm font-semibold transition-all sm:h-auto sm:w-auto sm:rounded-full sm:px-4 sm:py-2 ' + (isActive ? 'bg-green-600 text-white border-green-600' : 'bg-white text-gray-600 border-gray-200 hover:border-green-400 hover:text-green-600') + '">' +
-          '<span aria-hidden="true">' + (ICONS[cat] || '🛒') + '</span><span class="hidden sm:inline">' + escapeHtml(cat) + '</span></button>';
+          'class="cat-pill flex h-10 w-10 shrink-0 items-center justify-center gap-1.5 rounded-xl border text-sm font-semibold transition-all sm:h-auto sm:w-auto sm:rounded-full sm:px-4 sm:py-2 ' + (isActive ? 'bg-green-600 text-white border-green-600' : 'bg-white text-gray-600 border-gray-200 hover:border-green-400 hover:text-green-600') + '">' +
+          icon + '<span class="hidden sm:inline">' + escapeHtml(cat) + '</span></button>';
       }).join('');
     container.querySelectorAll('.cat-pill').forEach(function (button) {
       button.addEventListener('click', function () { filterCat(button.dataset.cat); });
     });
+    if (!container.dataset.scrollControlsBound) {
+      container.addEventListener('scroll', updateCategoryScrollControls, { passive: true });
+      container.dataset.scrollControlsBound = 'true';
+      window.addEventListener('resize', updateCategoryScrollControls);
+    }
+    window.requestAnimationFrame(updateCategoryScrollControls);
+  }
+
+  function updateCategoryScrollControls() {
+    var container = document.getElementById('category-pills');
+    var leftButton = document.getElementById('category-scroll-left');
+    var rightButton = document.getElementById('category-scroll-right');
+    if (!container || !leftButton || !rightButton) return;
+    var hasOverflow = container.scrollWidth > container.clientWidth + 2;
+    leftButton.classList.toggle('hidden', !hasOverflow);
+    leftButton.classList.toggle('flex', hasOverflow);
+    rightButton.classList.toggle('hidden', !hasOverflow);
+    rightButton.classList.toggle('flex', hasOverflow);
+  }
+
+  function scrollCategories(direction) {
+    var container = document.getElementById('category-pills');
+    if (!container) return;
+    var amount = Math.max(container.clientWidth * 0.75, 120);
+    container.scrollBy({ left: direction === 'left' ? -amount : amount, behavior: 'smooth' });
   }
 
   function filterCat(category) {
@@ -154,7 +183,7 @@ var Storefront = (function () {
     // تحديث الأزرار
     document.querySelectorAll('.cat-pill').forEach(function (btn) {
       var active = btn.dataset.cat === activeCategory;
-      btn.className = 'cat-pill flex h-10 w-10 items-center justify-center gap-1.5 rounded-xl border text-sm font-semibold transition-all sm:h-auto sm:w-auto sm:rounded-full sm:px-4 sm:py-2 ' +
+      btn.className = 'cat-pill flex h-10 w-10 shrink-0 items-center justify-center gap-1.5 rounded-xl border text-sm font-semibold transition-all sm:h-auto sm:w-auto sm:rounded-full sm:px-4 sm:py-2 ' +
         (active ? 'bg-green-600 text-white border-green-600' : 'bg-white text-gray-600 border-gray-200 hover:border-green-400 hover:text-green-600');
     });
 
@@ -204,5 +233,5 @@ var Storefront = (function () {
     CartUI.syncCards();
   }
 
-  return { fetchAndRenderProducts, render, renderPills, filterCat, search, addById, inc, dec };
+  return { fetchAndRenderProducts, render, renderPills, filterCat, search, addById, inc, dec, scrollCategories };
 })();

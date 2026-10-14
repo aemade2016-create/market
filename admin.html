@@ -321,9 +321,15 @@
               <i class="fa-solid fa-tag text-green-600"></i>
               <h2 class="font-bold text-gray-800">إضافة قسم جديد</h2>
             </div>
-            <form id="category-form" onsubmit="event.preventDefault(); window.addStoreCategory()" class="flex flex-col gap-3 sm:flex-row">
+            <form id="category-form" onsubmit="event.preventDefault(); window.addStoreCategory()" class="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(220px,auto)_auto]">
               <input id="category-name" type="text" maxlength="80" required placeholder="اسم القسم"
-                class="min-w-0 flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100"/>
+                class="min-w-0 rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100"/>
+              <label class="flex min-w-0 cursor-pointer items-center gap-3 rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:border-green-400">
+                <i class="fa-regular fa-image text-green-600"></i>
+                <span class="min-w-0 flex-1 truncate">اختيار أيقونة للقسم</span>
+                <input id="category-image" type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="sr-only" onchange="window.previewCategoryImage(this, 'category-image-preview')"/>
+              </label>
+              <img id="category-image-preview" alt="معاينة أيقونة القسم" class="hidden h-10 w-10 rounded-lg border border-gray-200 object-cover"/>
               <button type="submit" class="flex min-h-10 items-center justify-center gap-2 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-green-700">
                 <i class="fa-solid fa-plus"></i> إضافة القسم
               </button>
@@ -629,6 +635,16 @@
         <label for="category-edit-name" class="block text-sm font-semibold text-gray-700">اسم القسم الجديد</label>
         <input id="category-edit-name" type="text" maxlength="80" required
           class="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100"/>
+        <div>
+          <label for="category-edit-image" class="mb-2 block text-sm font-semibold text-gray-700">أيقونة القسم</label>
+          <div class="flex items-center gap-3">
+            <img id="category-edit-image-preview" alt="معاينة أيقونة القسم" class="hidden h-14 w-14 rounded-xl border border-gray-200 object-cover"/>
+            <label class="flex min-h-10 flex-1 cursor-pointer items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:border-green-400">
+              <i class="fa-regular fa-image text-green-600"></i><span>اختيار صورة جديدة</span>
+              <input id="category-edit-image" type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="sr-only" onchange="window.previewCategoryImage(this, 'category-edit-image-preview')"/>
+            </label>
+          </div>
+        </div>
         <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button type="button" onclick="window.closeCategoryEdit()" class="min-h-10 rounded-xl border border-gray-200 px-5 text-sm font-semibold text-gray-600 hover:bg-gray-50">إلغاء</button>
           <button type="submit" class="flex min-h-10 items-center justify-center gap-2 rounded-xl bg-green-600 px-5 text-sm font-bold text-white hover:bg-green-700"><i class="fa-solid fa-floppy-disk"></i> حفظ الاسم</button>
@@ -1074,8 +1090,11 @@
         tbody.innerHTML = categories.map(function (category) {
           var productCount = products.filter(function (product) { return product.category === category; }).length;
           var inUse = productCount > 0;
+          var image = DB.Categories.getImage(category);
           return '<tr class="border-t border-gray-50">' +
-            '<td class="break-words px-3 py-3 font-semibold text-gray-800 sm:px-5">' + escapeHtml(category) + '</td>' +
+            '<td class="break-words px-3 py-3 font-semibold text-gray-800 sm:px-5"><div class="flex items-center gap-3">' +
+              (image ? '<img src="' + escapeHtml(image) + '" alt="" class="h-9 w-9 shrink-0 rounded-lg border border-gray-100 object-cover" onerror="this.onerror=null;this.classList.add(\'hidden\')"/>' : '<span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-green-50 text-green-700"><i class="fa-solid fa-tag"></i></span>') +
+              '<span>' + escapeHtml(category) + '</span></div></td>' +
             '<td class="px-2 py-3 text-center"><span class="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-green-50 px-2 text-xs font-bold text-green-700">' + productCount + '</span></td>' +
             '<td class="px-2 py-3"><div class="flex items-center justify-center gap-1.5">' +
               '<button type="button" data-category="' + escapeHtml(category) + '" aria-label="تعديل ' + escapeHtml(category) + '" onclick="window.openCategoryEdit(this.dataset.category)" class="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 sm:w-auto sm:gap-1.5 sm:px-3"><i class="fa-solid fa-pen-to-square fa-xs"></i><span class="hidden sm:inline">تعديل</span></button>' +
@@ -1086,18 +1105,48 @@
         }).join('');
       }
 
+      window.previewCategoryImage = function (input, previewId) {
+        var preview = document.getElementById(previewId);
+        var file = input.files && input.files[0];
+        if (!preview || !file) return;
+        if (!/^image\/(png|jpeg|webp|gif)$/.test(file.type) || file.size > 5242880) {
+          input.value = '';
+          preview.removeAttribute('src');
+          preview.classList.add('hidden');
+          UI.showToast('اختر صورة JPG أو PNG أو WebP أو GIF لا يتجاوز حجمها 5 ميجابايت.', 'error');
+          return;
+        }
+        var reader = new FileReader();
+        reader.onload = function () {
+          preview.src = reader.result;
+          preview.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      };
+
       window.addStoreCategory = async function () {
         var input = document.getElementById('category-name');
         var name = input.value.trim();
+        var imageFile = document.getElementById('category-image').files[0];
         var result = await DB.Categories.add(name);
         if (!result.success) {
           UI.showToast(result.message || 'تعذرت إضافة القسم.', 'error');
           return;
         }
+        if (imageFile) {
+          var imageResult = await DB.Categories.setImage(result.category, imageFile);
+          if (!imageResult.success) {
+            renderCategoriesTable();
+            populateCategoryFilter();
+            UI.showToast('تمت إضافة القسم لكن تعذر رفع صورته: ' + imageResult.message, 'error', 5000);
+            return;
+          }
+        }
         document.getElementById('category-form').reset();
+        document.getElementById('category-image-preview').classList.add('hidden');
         renderCategoriesTable();
         populateCategoryFilter();
-        UI.showToast('تمت إضافة القسم.', 'success');
+        UI.showToast(imageFile ? 'تمت إضافة القسم وصورته.' : 'تمت إضافة القسم.', 'success');
       };
 
       window.deleteStoreCategory = function (name) {
@@ -1123,6 +1172,11 @@
       window.openCategoryEdit = function (name) {
         currentEditCategoryName = name;
         document.getElementById('category-edit-name').value = name;
+        document.getElementById('category-edit-image').value = '';
+        var imagePreview = document.getElementById('category-edit-image-preview');
+        var currentImage = DB.Categories.getImage(name);
+        imagePreview.src = currentImage || '';
+        imagePreview.classList.toggle('hidden', !currentImage);
         var modal = document.getElementById('category-edit-modal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
@@ -1141,15 +1195,21 @@
       window.saveCategoryRename = async function () {
         if (!currentEditCategoryName) return;
         var newName = document.getElementById('category-edit-name').value.trim();
+        var imageFile = document.getElementById('category-edit-image').files[0];
         var result = await DB.Categories.rename(currentEditCategoryName, newName);
         if (!result.success) {
           UI.showToast(result.message || 'تعذر تعديل اسم القسم.', 'error');
           return;
         }
+        var imageResult = imageFile ? await DB.Categories.setImage(result.category, imageFile) : null;
         window.closeCategoryEdit();
         renderCategoriesTable();
         populateCategoryFilter();
-        UI.showToast('تم تعديل اسم القسم والمنتجات المرتبطة به.', 'success');
+        if (imageResult && !imageResult.success) {
+          UI.showToast('تم تعديل القسم لكن تعذر رفع صورته: ' + imageResult.message, 'error', 5000);
+          return;
+        }
+        UI.showToast(imageFile ? 'تم تعديل القسم وصورته.' : 'تم تعديل اسم القسم والمنتجات المرتبطة به.', 'success');
       };
 
       window.openProductModal = function (id) {
