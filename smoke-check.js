@@ -77,12 +77,15 @@ async function run() {
   const login = await auth.login('test.customer', 'new-pass');
   if (!login.success || login.isAdmin) throw new Error('Customer login failed');
 
+  const emailLogin = await auth.login('customer@example.com', 'new-pass');
+  if (!emailLogin.success || emailLogin.isAdmin) throw new Error('Customer email login failed');
+
   const socialLogin = await auth.loginWithOAuth('google');
   if (!socialLogin.success) throw new Error('Google OAuth did not start');
   const facebookLogin = await auth.loginWithOAuth('facebook');
   if (!facebookLogin.success || oauthProviders.join(',') !== 'google,facebook') throw new Error('Google and Facebook OAuth providers were not requested');
-  authStateListener('SIGNED_IN', { user: { app_metadata: { provider: 'facebook' } } });
-  if (context.window.location.href !== './index.html') throw new Error('OAuth sign-in did not redirect to the storefront');
+  if (authStateListener) authStateListener('SIGNED_IN', { user: { app_metadata: { provider: 'facebook' } } });
+  if (context.window.location.href) throw new Error('OAuth auth-state event bypassed the post-login onboarding flow');
 
   const reset = await auth.requestPasswordReset('customer@example.com');
   if (!reset.success || resetEmail !== 'customer@example.com') throw new Error('Password reset request failed');

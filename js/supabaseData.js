@@ -227,12 +227,19 @@
       if (adminResult.error) throw adminResult.error;
       isAdmin = adminResult.data === true;
 
-      var profileResult = await client.from('profiles').select('*').eq('id', authUser.id).maybeSingle();
+      var profileResults = await Promise.all([
+        client.from('profiles').select('*').eq('id', authUser.id).maybeSingle(),
+        client.from('users').select('username').eq('id', authUser.id).maybeSingle(),
+      ]);
+      var profileResult = profileResults[0];
       if (profileResult.error) throw profileResult.error;
+      var usernameResult = profileResults[1];
+      if (usernameResult.error) throw usernameResult.error;
       var profile = profileFromRow(profileResult.data) || {};
       currentUser = Object.assign({}, profile, {
         id: authUser.id,
         email: authUser.email,
+        username: usernameResult.data && usernameResult.data.username || '',
         firstName: profile.firstName || authName(authUser.user_metadata, 'first_name'),
         lastName: profile.lastName || authName(authUser.user_metadata, 'last_name'),
         isAdmin: isAdmin,
@@ -241,7 +248,6 @@
 
     DB.Session.set(currentUser);
     await refresh();
-    await seedInitialCloudData();
     return true;
   }
 
@@ -260,6 +266,7 @@
       var results = await Promise.all([
         client.rpc('is_store_admin'),
         client.from('profiles').select('*').eq('id', authUser.id).maybeSingle(),
+        client.from('users').select('username').eq('id', authUser.id).maybeSingle(),
       ]);
       var adminResult = results[0];
       if (adminResult.error) throw adminResult.error;
@@ -267,10 +274,13 @@
 
       var profileResult = results[1];
       if (profileResult.error) throw profileResult.error;
+      var usernameResult = results[2];
+      if (usernameResult.error) throw usernameResult.error;
       var profile = profileFromRow(profileResult.data) || {};
       currentUser = Object.assign({}, profile, {
         id: authUser.id,
         email: authUser.email,
+        username: usernameResult.data && usernameResult.data.username || '',
         firstName: profile.firstName || authName(authUser.user_metadata, 'first_name'),
         lastName: profile.lastName || authName(authUser.user_metadata, 'last_name'),
         isAdmin: isAdmin,
@@ -285,6 +295,7 @@
   DB.init = init;
   DB.refresh = refresh;
   DB.syncSession = syncSession;
+  DB.seedInitialCloudData = seedInitialCloudData;
   DB.Session = {
     get: function () { return currentUser; },
     set: function (user) { currentUser = user; },
@@ -465,6 +476,23 @@
         return { success: false, message: 'غير مسموح بتعديل هذا الحساب.' };
       }
       try {
+        if (updates.username !== undefined) {
+          var completionResult = await requireClient().rpc('complete_my_profile', {
+            requested_username: String(updates.username || '').trim().toLowerCase(),
+            requested_phone: String(updates.phone || '').trim(),
+            requested_address: String(updates.address || '').trim(),
+          });
+          if (completionResult.error) return asError(completionResult.error);
+          currentUser = Object.assign({}, currentUser, {
+            username: String(updates.username).trim().toLowerCase(),
+            phone: String(updates.phone).trim(),
+            address: String(updates.address).trim(),
+          });
+          cache.profiles = cache.profiles.map(function (profile) {
+            return profile.id === currentUser.id ? Object.assign({}, profile, currentUser) : profile;
+          });
+          return { success: true, user: currentUser };
+        }
         var row = {
           first_name: updates.firstName,
           last_name: updates.lastName,

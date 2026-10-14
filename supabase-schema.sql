@@ -196,6 +196,18 @@ create trigger create_profile_after_auth_signup
   after insert on auth.users
   for each row execute function public.create_profile_for_auth_user();
 
+insert into public.users (id, email, username, full_name)
+select
+  users.id,
+  lower(users.email),
+  nullif(lower(btrim(users.raw_user_meta_data ->> 'username')), ''),
+  coalesce(users.raw_user_meta_data ->> 'full_name', users.raw_user_meta_data ->> 'name', '')
+from auth.users as users
+on conflict (id) do update set
+  email = excluded.email,
+  username = coalesce(public.users.username, excluded.username),
+  full_name = coalesce(nullif(public.users.full_name, ''), excluded.full_name);
+
 insert into public.profiles (id, email, first_name, last_name)
 select
   users.id,
@@ -285,6 +297,61 @@ alter table public.store_categories enable row level security;
 
 grant select, insert, update on public.profiles to authenticated;
 revoke all on table public.users from anon, authenticated;
+
+grant select (id, username) on table public.users to authenticated;
+revoke update (username) on table public.users from authenticated;
+
+drop policy if exists "Users read own username" on public.users;
+create policy "Users read own username"
+  on public.users for select
+  to authenticated
+  using (id = auth.uid());
+
+drop policy if exists "Users update own username" on public.users;
+
+create or replace function public.complete_my_profile(
+  requested_username text,
+  requested_phone text,
+  requested_address text
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  normalized_username text := lower(btrim(requested_username));
+begin
+  if auth.uid() is null then
+    raise exception 'Authentication required';
+  end if;
+  if normalized_username is null or normalized_username !~ '^[a-z0-9_.-]{3,30}$' then
+    raise exception 'Username must be 3-30 characters using English letters, numbers, dot, underscore, or hyphen';
+  end if;
+  if nullif(btrim(requested_phone), '') is null or nullif(btrim(requested_address), '') is null then
+    raise exception 'Phone and address are required';
+  end if;
+
+  update public.users
+  set username = normalized_username
+  where id = auth.uid();
+  if not found then
+    raise exception 'User record not found';
+  end if;
+
+  update public.profiles
+  set phone = btrim(requested_phone),
+      address = btrim(requested_address),
+      updated_at = now()
+  where id = auth.uid();
+  if not found then
+    raise exception 'Profile record not found';
+  end if;
+end;
+$$;
+
+revoke all on function public.complete_my_profile(text, text, text) from public, anon;
+grant execute on function public.complete_my_profile(text, text, text) to authenticated;
 
 drop policy if exists "Users read own profile and admins read all" on public.profiles;
 create policy "Users read own profile and admins read all"

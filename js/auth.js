@@ -4,8 +4,6 @@
 // ════════════════════════════════════════════════════════════════════
 
 var Auth = (function () {
-  var socialAuthDetected = false;
-
   function errorMessage(error) {
     var message = error && error.message ? error.message : '';
     if (/invalid login credentials/i.test(message)) return 'اسم المستخدم أو كلمة المرور غير صحيحة.';
@@ -16,15 +14,20 @@ var Auth = (function () {
   }
 
   async function login(username, password) {
-    if (!username || !password) return { success: false, message: 'يرجى إدخال اسم المستخدم وكلمة المرور.' };
+    if (!username || !password) return { success: false, message: 'يرجى إدخال البريد الإلكتروني أو اسم المستخدم وكلمة المرور.' };
     try {
-      var lookup = await window.supabaseClient.rpc('email_for_username', {
-        requested_username: username.trim().toLowerCase(),
-      });
-      if (lookup.error) return { success: false, message: errorMessage(lookup.error) };
-      if (!lookup.data) return { success: false, message: 'اسم المستخدم أو كلمة المرور غير صحيحة.' };
+      var identity = username.trim().toLowerCase();
+      var email = identity;
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identity)) {
+        var lookup = await window.supabaseClient.rpc('email_for_username', {
+          requested_username: identity,
+        });
+        if (lookup.error) return { success: false, message: errorMessage(lookup.error) };
+        if (!lookup.data) return { success: false, message: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.' };
+        email = lookup.data;
+      }
       var result = await window.supabaseClient.auth.signInWithPassword({
-        email: lookup.data,
+        email: email,
         password: password,
       });
       if (result.error) return { success: false, message: errorMessage(result.error) };
@@ -108,8 +111,10 @@ var Auth = (function () {
     return true;
   }
 
-  function redirectIfLoggedIn() {
-    if (isLoggedIn()) window.location.href = socialAuthDetected || !isAdmin() ? './index.html' : './admin.html';
+  async function redirectIfLoggedIn() {
+    if (!isLoggedIn()) return;
+    if (window.Onboarding && !(await window.Onboarding.ensureComplete())) return;
+    window.location.href = isAdmin() ? './admin.html' : './index.html';
   }
 
   async function requestPasswordReset(email) {
@@ -146,25 +151,6 @@ var Auth = (function () {
     } catch (error) {
       return { success: false, message: errorMessage(error) };
     }
-  }
-
-  function isSocialUser(user) {
-    var provider = user && user.app_metadata && user.app_metadata.provider;
-    return provider === 'google' || provider === 'facebook';
-  }
-
-  function isAuthPage() {
-    return /\/auth(\.html)?$/.test(window.location.pathname);
-  }
-
-  if (window.supabaseClient && window.supabaseClient.auth && window.supabaseClient.auth.onAuthStateChange) {
-    window.supabaseClient.auth.onAuthStateChange(function (event, session) {
-      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session && isSocialUser(session.user)) {
-        socialAuthDetected = true;
-        // INITIAL_SESSION يتبعت مع كل تحميل صفحة، فالتحويل برّه صفحة الدخول بيعمل حلقة إعادة تحميل
-        if (isAuthPage()) window.location.href = './index.html';
-      }
-    });
   }
 
   return { login: login, loginWithOAuth: loginWithOAuth, register: register, logout: logout, getCurrentUser: getCurrentUser, isLoggedIn: isLoggedIn, isAdmin: isAdmin, requireAuth: requireAuth, requireAdmin: requireAdmin, redirectIfLoggedIn: redirectIfLoggedIn, requestPasswordReset: requestPasswordReset, updatePassword: updatePassword, changePassword: changePassword };

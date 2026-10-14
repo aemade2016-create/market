@@ -15,7 +15,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
     return;
   }
-  if (!recoveryMode) Auth.redirectIfLoggedIn();
+  if (!recoveryMode && Auth.isLoggedIn()) {
+    await Auth.redirectIfLoggedIn();
+    return;
+  }
 
   // تحميل بيانات المتجر
   var s = DB.Settings.get();
@@ -118,8 +121,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     var result = await Auth.login(username, pass);
     setLoading(btn, false, '<i class="fa-solid fa-right-to-bracket"></i> تسجيل الدخول');
     if (!result.success) { showError('login-error', result.message); UI.shake(document.getElementById('login-form')); return; }
+    await Onboarding.ensureComplete();
     UI.showToast('أهلاً بك' + (result.user.firstName ? '، ' + result.user.firstName : '') + '! ✨', 'success');
-    setTimeout(function () { window.location.href = result.isAdmin ? './admin.html' : './index.html'; }, 500);
+    setTimeout(function () { window.location.href = Auth.isAdmin() ? './admin.html' : './index.html'; }, 500);
   });
 
   // ── إنشاء حساب ───────────────────────────────────────────────────
@@ -143,8 +147,9 @@ document.addEventListener('DOMContentLoaded', async function () {
       showForm('login');
       return;
     }
+    await Onboarding.ensureComplete();
     UI.showToast('تم إنشاء حسابك بنجاح! يسعدنا انضمامك 🎉', 'success');
-    setTimeout(function () { window.location.href = './index.html'; }, 500);
+    setTimeout(function () { window.location.href = Auth.isAdmin() ? './admin.html' : './index.html'; }, 500);
   });
 
   // ── نسيان كلمة المرور ────────────────────────────────────────────
