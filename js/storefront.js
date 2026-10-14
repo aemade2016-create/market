@@ -32,7 +32,7 @@ var Storefront = (function () {
         '<div class="relative overflow-hidden bg-gray-50 aspect-[4/3]">' +
           '<img src="' + product.image + '" alt="' + product.name + '" loading="lazy" ' +
             'class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" ' +
-            'onerror="this.src=\'https://via.placeholder.com/300x200?text=' + encodeURIComponent(product.name) + '\'">' +
+            'onerror="this.onerror=null;this.style.visibility=\'hidden\'">' +
           '<span class="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-xs font-semibold text-gray-600 px-2 py-0.5 rounded-full border border-gray-100">' + escapeHtml(product.category) + '</span>' +
         '</div>' +
         '<div class="p-3 sm:p-4">' +
@@ -110,7 +110,6 @@ var Storefront = (function () {
       return;
     }
 
-    container.innerHTML = '';
     try {
       if (!window.supabaseClient) throw new Error('تعذر الاتصال بـ Supabase.');
 

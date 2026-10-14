@@ -153,11 +153,16 @@ var Auth = (function () {
     return provider === 'google' || provider === 'facebook';
   }
 
+  function isAuthPage() {
+    return /\/auth(\.html)?$/.test(window.location.pathname);
+  }
+
   if (window.supabaseClient && window.supabaseClient.auth && window.supabaseClient.auth.onAuthStateChange) {
     window.supabaseClient.auth.onAuthStateChange(function (event, session) {
       if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session && isSocialUser(session.user)) {
         socialAuthDetected = true;
-        window.location.href = './index.html';
+        // INITIAL_SESSION يتبعت مع كل تحميل صفحة، فالتحويل برّه صفحة الدخول بيعمل حلقة إعادة تحميل
+        if (isAuthPage()) window.location.href = './index.html';
       }
     });
   }

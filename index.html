@@ -16,7 +16,7 @@
 </head>
 <body class="overflow-x-clip bg-gray-50 text-gray-900">
 
-  <div id="header-placeholder"></div>
+  <div id="header-placeholder" class="sticky top-0 z-50 h-16 bg-white/95 border-b border-gray-100 shadow-sm"></div>
 
   <!-- Hero -->
   <section class="hero-gradient text-white">
@@ -26,7 +26,7 @@
           <p class="text-green-300 text-sm font-semibold mb-2 flex items-center gap-1.5 justify-center sm:justify-start">
             <i class="fa-solid fa-bolt"></i> عروض اليوم الحصرية
           </p>
-          <h1 id="hero-store-name" class="text-2xl min-[400px]:text-3xl sm:text-4xl font-extrabold leading-tight mb-3 break-words">سوبر ماركت النجمة</h1>
+          <h1 id="hero-store-name" class="text-2xl min-[400px]:text-3xl sm:text-4xl font-extrabold leading-tight mb-3 break-words"><span class="inline-block h-9 w-48 max-w-full animate-pulse rounded-lg bg-white/20 align-middle"></span></h1>
           <p class="text-green-100 text-base mb-6 max-w-md">أطازج المنتجات بأفضل الأسعار، توصيل سريع لباب بيتك 🚚</p>
           <div class="flex flex-wrap items-center gap-3 justify-center sm:justify-start">
             <button onclick="document.getElementById('storefront-container').scrollIntoView({behavior:'smooth'})"
@@ -38,11 +38,11 @@
         </div>
         <div class="grid grid-cols-3 gap-3 sm:gap-4">
           <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center border border-white/20">
-            <p class="text-2xl font-extrabold" id="stats-products">16</p>
+            <p class="text-2xl font-extrabold" id="stats-products"><span class="inline-block h-7 w-8 animate-pulse rounded bg-white/20 align-middle"></span></p>
             <p class="text-green-200 text-xs mt-0.5">منتج</p>
           </div>
           <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center border border-white/20">
-            <p class="text-2xl font-extrabold" id="stats-categories">6</p>
+            <p class="text-2xl font-extrabold" id="stats-categories"><span class="inline-block h-7 w-8 animate-pulse rounded bg-white/20 align-middle"></span></p>
             <p class="text-green-200 text-xs mt-0.5">قسم</p>
           </div>
           <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center border border-white/20">
@@ -66,6 +66,20 @@
     <div id="storefront-container" class="grid min-w-0 grid-cols-1 gap-4 min-[400px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
     </div>
   </main>
+  <script>
+    // هيكل تحميل مؤقت لحد ما البيانات توصل من Supabase
+    document.getElementById('category-pills').innerHTML = Array(7).join(
+      '<div class="h-10 w-10 animate-pulse rounded-xl bg-gray-100 sm:w-24 sm:rounded-full"></div>');
+    document.getElementById('storefront-container').innerHTML = Array(9).join(
+      '<div class="overflow-hidden rounded-2xl border border-gray-100 bg-white">' +
+        '<div class="aspect-[4/3] animate-pulse bg-gray-100"></div>' +
+        '<div class="space-y-3 p-3 sm:p-4">' +
+          '<div class="h-4 w-2/3 animate-pulse rounded bg-gray-100"></div>' +
+          '<div class="h-4 w-1/3 animate-pulse rounded bg-gray-100"></div>' +
+          '<div class="h-10 animate-pulse rounded-xl bg-gray-100"></div>' +
+        '</div>' +
+      '</div>');
+  </script>
 
   <!-- Footer -->
   <footer class="bg-gray-800 text-gray-400 mt-16">
@@ -128,7 +142,10 @@
         hint: error && error.hint,
         error: error,
       });
-      document.getElementById('category-pills').innerHTML = '<p class="py-3 text-center text-sm text-red-600">تعذر الاتصال بالمتجر.</p>';
+      document.getElementById('hero-store-name').textContent = DB.Settings.get().name;
+      document.getElementById('stats-products').textContent = '—';
+      document.getElementById('stats-categories').textContent = '—';
+      document.getElementById('category-pills').innerHTML = '<p class="col-span-full py-3 text-center text-sm text-red-600">تعذر الاتصال بالمتجر.</p>';
       document.getElementById('storefront-container').innerHTML =
         '<div class="col-span-full py-12 text-center" role="alert">' +
           '<p class="font-semibold text-red-600">فشل الاتصال بقاعدة البيانات.</p>' +
