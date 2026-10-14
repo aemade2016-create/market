@@ -108,6 +108,13 @@
                      class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 outline-none focus:border-green-400 focus:bg-white focus:ring-2 focus:ring-green-100 disabled:opacity-60 disabled:cursor-not-allowed transition"/>
             </div>
 
+            <!-- Username -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 mb-1.5">اسم المستخدم</label>
+              <input id="field-username" type="text" maxlength="30" disabled
+                     class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 outline-none focus:border-green-400 focus:bg-white focus:ring-2 focus:ring-green-100 disabled:opacity-60 disabled:cursor-not-allowed transition"/>
+            </div>
+
             <!-- Email (always readonly) -->
             <div>
               <label class="block text-xs font-semibold text-gray-500 mb-1.5">البريد الإلكتروني</label>
@@ -539,7 +546,7 @@
       // ══════════════════════════════════════════════════════════════
       window.toggleEditMode = function () {
         editModeActive = true;
-        var fields = ['field-firstName', 'field-lastName', 'field-phone'];
+        var fields = ['field-firstName', 'field-lastName', 'field-username', 'field-phone'];
         fields.forEach(function (id) {
           var el = document.getElementById(id);
           el.disabled = false;
@@ -560,10 +567,11 @@
         // Restore original values
         document.getElementById('field-firstName').value = currentUser.firstName || '';
         document.getElementById('field-lastName').value  = currentUser.lastName  || '';
+        document.getElementById('field-username').value  = currentUser.username  || '';
         document.getElementById('field-phone').value     = currentUser.phone     || '';
         document.getElementById('field-address').value   = currentUser.address   || '';
 
-        var fields = ['field-firstName', 'field-lastName', 'field-phone'];
+        var fields = ['field-firstName', 'field-lastName', 'field-username', 'field-phone'];
         fields.forEach(function (id) {
           var el = document.getElementById(id);
           el.disabled = true;
@@ -582,6 +590,7 @@
       window.savePersonalInfo = async function () {
         var firstName = document.getElementById('field-firstName').value.trim();
         var lastName  = document.getElementById('field-lastName').value.trim();
+        var username  = document.getElementById('field-username').value.trim();
         var phone     = document.getElementById('field-phone').value.trim();
         var address   = document.getElementById('field-address').value.trim();
 
@@ -590,19 +599,19 @@
           return;
         }
 
-        var result = await DB.Users.update(currentUser.email, { firstName: firstName, lastName: lastName, phone: phone, address: address });
+        var result = await DB.Users.update(currentUser.email, { firstName: firstName, lastName: lastName, username: username, phone: phone, address: address });
         if (!result.success) {
           UI.showToast(result.message || 'حدث خطأ أثناء الحفظ', 'error');
           return;
         }
 
         // Update session
-        currentUser = Object.assign({}, currentUser, { firstName: firstName, lastName: lastName, phone: phone, address: address });
+        currentUser = Object.assign({}, currentUser, { firstName: firstName, lastName: lastName, username: username.toLowerCase(), phone: phone, address: address });
         DB.Session.set(currentUser);
 
         // Exit edit mode
         editModeActive = false;
-        var fields = ['field-firstName', 'field-lastName', 'field-phone'];
+        var fields = ['field-firstName', 'field-lastName', 'field-username', 'field-phone'];
         fields.forEach(function (id) {
           var el = document.getElementById(id);
           el.disabled = true;
@@ -708,6 +717,7 @@
       function populateForm() {
         document.getElementById('field-firstName').value = currentUser.firstName || '';
         document.getElementById('field-lastName').value  = currentUser.lastName  || '';
+        document.getElementById('field-username').value  = currentUser.username  || '';
         document.getElementById('field-email').value     = currentUser.email     || '';
         document.getElementById('field-phone').value     = currentUser.phone     || '';
         document.getElementById('field-address').value   = currentUser.address   || '';

@@ -482,12 +482,29 @@
             requested_phone: String(updates.phone || '').trim(),
             requested_address: String(updates.address || '').trim(),
           });
-          if (completionResult.error) return asError(completionResult.error);
+          if (completionResult.error) {
+            if (/users_username_lower_idx|duplicate key/i.test(completionResult.error.message || '')) {
+              return { success: false, message: 'اسم المستخدم مستخدم بالفعل، اختر اسماً آخر.' };
+            }
+            return asError(completionResult.error);
+          }
+          var profileRow = {
+            first_name: updates.firstName,
+            last_name: updates.lastName,
+            updated_at: new Date().toISOString(),
+          };
+          Object.keys(profileRow).forEach(function (key) { if (profileRow[key] === undefined) delete profileRow[key]; });
+          var profile = currentUser;
+          if (Object.keys(profileRow).length > 1) {
+            var profileUpdate = await requireClient().from('profiles').update(profileRow).eq('id', currentUser.id).select('*').single();
+            if (profileUpdate.error) return asError(profileUpdate.error);
+            profile = profileFromRow(profileUpdate.data);
+          }
           currentUser = Object.assign({}, currentUser, {
             username: String(updates.username).trim().toLowerCase(),
             phone: String(updates.phone).trim(),
             address: String(updates.address).trim(),
-          });
+          }, profile);
           cache.profiles = cache.profiles.map(function (profile) {
             return profile.id === currentUser.id ? Object.assign({}, profile, currentUser) : profile;
           });

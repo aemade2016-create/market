@@ -468,6 +468,40 @@
         <!-- ══ SECTION: SETTINGS ══ -->
         <section id="section-settings" class="admin-section">
           <div class="w-full min-w-0">
+            <div class="w-full min-w-0 bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-5">
+              <div class="flex items-center gap-2 mb-6 pb-4 border-b border-gray-100">
+                <i class="fa-solid fa-user-gear text-green-600"></i>
+                <h2 class="font-bold text-gray-800">بيانات حساب المشرف</h2>
+              </div>
+              <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-1.5">الاسم الأول</label>
+                  <input id="admin-profile-first-name" type="text" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100"/>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-1.5">الاسم الأخير</label>
+                  <input id="admin-profile-last-name" type="text" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100"/>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-1.5">اسم المستخدم</label>
+                  <input id="admin-profile-username" type="text" maxlength="30" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100"/>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-1.5">رقم الهاتف</label>
+                  <input id="admin-profile-phone" type="tel" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100"/>
+                </div>
+                <div class="lg:col-span-2">
+                  <label class="block text-sm font-semibold text-gray-700 mb-1.5">العنوان</label>
+                  <textarea id="admin-profile-address" rows="2" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 resize-none"></textarea>
+                </div>
+                <div class="pt-2 lg:col-span-2">
+                  <button onclick="window.saveAdminProfile()" class="flex min-h-10 items-center gap-2 bg-green-600 hover:bg-green-700 text-white rounded-xl px-6 py-2.5 text-sm font-bold shadow-sm shadow-green-200 transition-colors">
+                    <i class="fa-solid fa-floppy-disk"></i> حفظ بيانات الحساب
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <div class="w-full min-w-0 bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
               <div class="flex items-center gap-2 mb-6 pb-4 border-b border-gray-100">
                 <i class="fa-solid fa-gear text-green-600"></i>
@@ -850,6 +884,7 @@
           renderCustomersTable();
         } else if (id === 'settings') {
           loadSettingsForm();
+          loadAdminProfileForm();
         } else if (id === 'admins') {
           window.renderAdminsTable();
         }
@@ -1565,6 +1600,44 @@
         var preview = document.getElementById('settings-logo-preview');
         preview.src = s.logo || '';
       }
+
+      function loadAdminProfileForm() {
+        var user = Auth.getCurrentUser();
+        if (!user) return;
+        document.getElementById('admin-profile-first-name').value = user.firstName || '';
+        document.getElementById('admin-profile-last-name').value  = user.lastName || '';
+        document.getElementById('admin-profile-username').value   = user.username || '';
+        document.getElementById('admin-profile-phone').value      = user.phone || '';
+        document.getElementById('admin-profile-address').value    = user.address || '';
+      }
+
+      window.saveAdminProfile = async function () {
+        var user = Auth.getCurrentUser();
+        if (!user) return;
+        var updates = {
+          firstName: document.getElementById('admin-profile-first-name').value.trim(),
+          lastName: document.getElementById('admin-profile-last-name').value.trim(),
+          username: document.getElementById('admin-profile-username').value.trim(),
+          phone: document.getElementById('admin-profile-phone').value.trim(),
+          address: document.getElementById('admin-profile-address').value.trim(),
+        };
+        if (!updates.firstName || !updates.lastName) {
+          UI.showToast('يرجى إدخال الاسم الأول والاسم الأخير.', 'error');
+          return;
+        }
+        if (!/^[a-z0-9_.-]{3,30}$/i.test(updates.username)) {
+          UI.showToast('اسم المستخدم يجب أن يتكون من 3 إلى 30 حرفاً إنجليزياً أو رقماً أو (._-).', 'error');
+          return;
+        }
+        var result = await DB.Users.update(user.email, updates);
+        if (!result.success) {
+          UI.showToast(result.message || 'تعذر حفظ بيانات الحساب.', 'error');
+          return;
+        }
+        DB.Session.set(result.user);
+        loadAdminProfileForm();
+        UI.showToast('تم حفظ بيانات حساب المشرف.', 'success');
+      };
 
       function refreshStoreBranding() {
         var s = DB.Settings.get();
