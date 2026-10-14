@@ -500,11 +500,11 @@
             if (profileUpdate.error) return asError(profileUpdate.error);
             profile = profileFromRow(profileUpdate.data);
           }
-          currentUser = Object.assign({}, currentUser, {
+          currentUser = Object.assign({}, currentUser, profile, {
             username: String(updates.username).trim().toLowerCase(),
             phone: String(updates.phone).trim(),
             address: String(updates.address).trim(),
-          }, profile);
+          });
           cache.profiles = cache.profiles.map(function (profile) {
             return profile.id === currentUser.id ? Object.assign({}, profile, currentUser) : profile;
           });
