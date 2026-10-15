@@ -12,6 +12,7 @@ var Storefront = (function () {
   };
 
   var activeCategory = 'all';
+  var currentProducts = [];
 
   function escapeHtml(value) {
     return String(value == null ? '' : value)
@@ -61,6 +62,7 @@ var Storefront = (function () {
       return;
     }
     container.innerHTML = '';
+    currentProducts = [];
 
     try {
       var list = products;
@@ -81,6 +83,7 @@ var Storefront = (function () {
           image: String(product.image || product.image_url || ''),
         });
       });
+      currentProducts = list;
 
       if (list.length === 0) {
         container.innerHTML =
@@ -212,7 +215,7 @@ var Storefront = (function () {
   }
 
   function addById(id) {
-    var p = DB.Products.findById(id);
+    var p = currentProducts.find(function (product) { return product.id === String(id); }) || DB.Products.findById(id);
     if (!p) return;
     CartUI.addToCart(p);
     CartUI.syncCards();
