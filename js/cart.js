@@ -1,6 +1,5 @@
 // ════════════════════════════════════════════════════════════════════
-// cart.js — منطق السلة والـ Sidebar
-// نسخة نظيفة وموثوقة
+// cart.js — منطق السلة والـ Sidebar (Supabase Cart CRUD)
 // ════════════════════════════════════════════════════════════════════
 
 var CartUI = (function () {
@@ -18,8 +17,8 @@ var CartUI = (function () {
     var cart = DB.Cart.get();
 
     document.querySelectorAll('[data-product-id]').forEach(function (card) {
-      var id = card.dataset.productId;
-      var item = cart.find(function (product) { return product.id === id; });
+      var id = String(card.dataset.productId);
+      var item = cart.find(function (product) { return String(product.id) === id; });
       var addBtn = card.querySelector('[data-add-btn]');
       var qtyCtrl = card.querySelector('[data-qty-ctrl]');
 
@@ -53,12 +52,20 @@ var CartUI = (function () {
     });
   }
 
-  function addToCart(product) {
+  function showCartError(result) {
+    UI.showToast((result && result.message) || 'تعذر تحديث السلة. حاول مرة أخرى.', 'error');
+  }
+
+  async function addToCart(product) {
     if (!Auth.isLoggedIn()) {
       requireLogin();
       return false;
     }
-    if (!DB.Cart.add(product, 1)) return false;
+    var result = await DB.Cart.add(product, 1);
+    if (!result || result.success === false) {
+      showCartError(result);
+      return false;
+    }
     sync();
     if (product && product.name) {
       UI.showToast('تمت إضافة "' + product.name + '" إلى السلة 🛒', 'success', 2500);
@@ -172,19 +179,21 @@ var CartUI = (function () {
     }
 
     var itemsHtml = cart.map(function (item) {
+      var price = Number(item.price) || 0;
+      var safeId = String(item.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
       return '<div class="flex gap-3 p-4 border-b border-gray-50">' +
         '<img src="' + item.image + '" alt="' + item.name + '" class="w-16 h-16 object-cover rounded-xl flex-shrink-0 bg-gray-100" onerror="this.src=\'https://via.placeholder.com/64?text=م\'">' +
         '<div class="flex-1 min-w-0">' +
           '<p class="text-sm font-semibold text-gray-800 truncate">' + item.name + '</p>' +
-          '<p class="text-green-600 font-bold text-sm mt-0.5">' + item.price.toFixed(2) + ' ' + settings.currency + '</p>' +
+          '<p class="text-green-600 font-bold text-sm mt-0.5">' + price.toFixed(2) + ' ' + settings.currency + '</p>' +
           '<div class="flex items-center gap-2 mt-2">' +
-            '<button type="button" onclick="CartUI.updateQty(\'' + item.id + '\',' + (item.qty - 1) + ')" class="h-10 w-10 flex-shrink-0 rounded-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-red-50 hover:text-red-500"><i class="fa-solid fa-minus fa-xs"></i></button>' +
+            '<button type="button" onclick="CartUI.updateQty(\'' + safeId + '\',' + (item.qty - 1) + ')" class="h-10 w-10 flex-shrink-0 rounded-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-red-50 hover:text-red-500"><i class="fa-solid fa-minus fa-xs"></i></button>' +
             '<span class="w-8 text-center text-sm font-bold text-gray-800">' + item.qty + '</span>' +
-            '<button type="button" onclick="CartUI.updateQty(\'' + item.id + '\',' + (item.qty + 1) + ')" class="h-10 w-10 flex-shrink-0 rounded-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-green-50 hover:text-green-600"><i class="fa-solid fa-plus fa-xs"></i></button>' +
-            '<span class="mr-auto text-xs text-gray-400">' + (item.price * item.qty).toFixed(2) + ' ' + settings.currency + '</span>' +
+            '<button type="button" onclick="CartUI.updateQty(\'' + safeId + '\',' + (item.qty + 1) + ')" class="h-10 w-10 flex-shrink-0 rounded-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-green-50 hover:text-green-600"><i class="fa-solid fa-plus fa-xs"></i></button>' +
+            '<span class="mr-auto text-xs text-gray-400">' + (price * item.qty).toFixed(2) + ' ' + settings.currency + '</span>' +
           '</div>' +
         '</div>' +
-        '<button type="button" onclick="CartUI.removeItem(\'' + item.id + '\')" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 hover:bg-red-100 hover:text-red-500 self-start flex-shrink-0"><i class="fa-solid fa-trash-can fa-xs"></i></button>' +
+        '<button type="button" onclick="CartUI.removeItem(\'' + safeId + '\')" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 hover:bg-red-100 hover:text-red-500 self-start flex-shrink-0"><i class="fa-solid fa-trash-can fa-xs"></i></button>' +
       '</div>';
     }).join('');
 
@@ -202,14 +211,22 @@ var CartUI = (function () {
       '</div>';
   }
 
-  function updateQty(id, qty) {
-    DB.Cart.updateQty(id, qty);
+  async function updateQty(id, qty) {
+    var result = await DB.Cart.updateQty(id, qty);
+    if (!result || result.success === false) {
+      showCartError(result);
+      return;
+    }
     sync();
     renderSidebar();
   }
 
-  function removeItem(id) {
-    DB.Cart.remove(id);
+  async function removeItem(id) {
+    var result = await DB.Cart.remove(id);
+    if (!result || result.success === false) {
+      showCartError(result);
+      return;
+    }
     sync();
     renderSidebar();
     UI.showToast('تم حذف المنتج من السلة', 'info', 2000);
@@ -222,8 +239,12 @@ var CartUI = (function () {
       confirmText: 'نعم، تفريغ',
       cancelText: 'إلغاء',
       type: 'danger',
-      onConfirm: function () {
-        DB.Cart.clear();
+      onConfirm: async function () {
+        var result = await DB.Cart.clear();
+        if (!result || result.success === false) {
+          showCartError(result);
+          return;
+        }
         sync();
         renderSidebar();
       }

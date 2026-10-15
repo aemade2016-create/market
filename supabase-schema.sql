@@ -489,6 +489,51 @@ create policy "Admins manage store settings"
   using (public.is_store_admin())
   with check (public.is_store_admin());
 
+-- Per-user shopping cart (CRUD via authenticated client + RLS).
+create table if not exists public.cart_items (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  product_id text not null references public.products(id) on delete cascade,
+  qty integer not null check (qty > 0),
+  name text not null default '',
+  price numeric(12, 2) not null default 0 check (price >= 0),
+  image text not null default '',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (user_id, product_id)
+);
+
+create index if not exists cart_items_user_id_idx
+  on public.cart_items (user_id);
+
+alter table public.cart_items enable row level security;
+
+grant select, insert, update, delete on public.cart_items to authenticated;
+
+drop policy if exists "Customers read own cart" on public.cart_items;
+create policy "Customers read own cart"
+  on public.cart_items for select
+  to authenticated
+  using (user_id = auth.uid());
+
+drop policy if exists "Customers insert own cart" on public.cart_items;
+create policy "Customers insert own cart"
+  on public.cart_items for insert
+  to authenticated
+  with check (user_id = auth.uid());
+
+drop policy if exists "Customers update own cart" on public.cart_items;
+create policy "Customers update own cart"
+  on public.cart_items for update
+  to authenticated
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());
+
+drop policy if exists "Customers delete own cart" on public.cart_items;
+create policy "Customers delete own cart"
+  on public.cart_items for delete
+  to authenticated
+  using (user_id = auth.uid());
+
 -- Run this after creating the account in Supabase Auth.
 insert into public.admin_users (user_id)
 select id from auth.users where lower(email) = lower('aemade2026@gmail.com')

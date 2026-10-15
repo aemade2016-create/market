@@ -164,7 +164,7 @@ var Checkout = (function () {
   }
 
   // ── تأكيد الطلب ───────────────────────────────────────────────────
-  function submitOrder() {
+  async function submitOrder() {
     var nameEl    = document.getElementById('co-name');
     var phoneEl   = document.getElementById('co-phone');
     var addressEl = document.getElementById('co-address');
@@ -191,8 +191,17 @@ var Checkout = (function () {
     var settings = DB.Settings.get();
     var total    = DB.Cart.total();
 
-    // حفظ الطلب
-    var result = DB.Orders.add({
+    var btn = document.getElementById('co-submit');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML =
+        '<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">' +
+          '<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>' +
+          '<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>' +
+        '</svg> جاري تجهيز الطلب...';
+    }
+
+    var result = await DB.Orders.add({
       email:        user.email,
       customerName: name,
       phone:        phone,
@@ -205,38 +214,29 @@ var Checkout = (function () {
     });
 
     if (!result.success) {
-      UI.showToast('حدث خطأ أثناء حفظ الطلب. حاول مرة أخرى.', 'error');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-bag-shopping"></i> تأكيد الطلب';
+      }
+      UI.showToast(result.message || 'حدث خطأ أثناء حفظ الطلب. حاول مرة أخرى.', 'error');
       return;
     }
 
-    // تحديث بيانات العميل تلقائياً
-    if (user && (phone || address))
-      DB.Users.update(user.email, { phone: phone, address: address });
-
-    // زر التحميل
-    var btn = document.getElementById('co-submit');
-    if (btn) {
-      btn.disabled = true;
-      btn.innerHTML =
-        '<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">' +
-          '<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>' +
-          '<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>' +
-        '</svg> جاري تجهيز الطلب...';
+    if (user && (phone || address)) {
+      try { await DB.Users.update(user.email, { phone: phone, address: address }); } catch (error) {}
     }
 
-    setTimeout(function() {
-      var order  = result.order;
-      var waMsg  = buildWhatsAppMessage(order, settings);
-      var waURL  = 'https://wa.me/' + settings.whatsapp + '?text=' + encodeURIComponent(waMsg);
+    var order  = result.order;
+    var waMsg  = buildWhatsAppMessage(order, settings);
+    var waURL  = 'https://wa.me/' + settings.whatsapp + '?text=' + encodeURIComponent(waMsg);
 
-      DB.Cart.clear();
-      CartUI.sync();
-      CartUI.closeCart();
-      closeModal();
-      showSuccess(order);
+    await DB.Cart.clear();
+    CartUI.sync();
+    CartUI.closeCart();
+    closeModal();
+    showSuccess(order);
 
-      setTimeout(function() { window.open(waURL, '_blank'); }, 500);
-    }, 800);
+    setTimeout(function() { window.open(waURL, '_blank'); }, 500);
   }
 
   // ── رسالة واتساب ─────────────────────────────────────────────────

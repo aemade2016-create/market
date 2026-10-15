@@ -1,4 +1,4 @@
-// Supabase-backed data adapters. The cart remains local to each browser.
+// Supabase-backed data adapters, including per-user cart CRUD.
 (function () {
   var client = window.supabaseClient;
   var localDB = {
@@ -22,6 +22,7 @@
     orders: [],
     profiles: [],
     admins: [],
+    cart: [],
   };
   var currentUser = null;
   var isAdmin = false;
@@ -104,6 +105,17 @@
     };
   }
 
+  function cartItemFromRow(row) {
+    if (!row) return null;
+    return {
+      id: String(row.product_id),
+      name: row.name || '',
+      price: Number(row.price) || 0,
+      image: row.image || '',
+      qty: Number(row.qty) || 0,
+    };
+  }
+
   function productId() {
     if (window.crypto && typeof window.crypto.randomUUID === 'function') return 'p_' + window.crypto.randomUUID();
     return 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
@@ -151,6 +163,10 @@
       if (ordersResult.error) throw ordersResult.error;
       cache.orders = (ordersResult.data || []).map(orderFromRow);
 
+      var cartResult = await client.from('cart_items').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: true });
+      if (cartResult.error) throw cartResult.error;
+      cache.cart = (cartResult.data || []).map(cartItemFromRow);
+
       var profilesQuery = client.from('profiles').select('*');
       if (!isAdmin) profilesQuery = profilesQuery.eq('id', currentUser.id);
       var profilesResult = await profilesQuery.order('created_at', { ascending: false });
@@ -159,6 +175,7 @@
     } else {
       cache.orders = [];
       cache.profiles = [];
+      cache.cart = [];
     }
 
     if (isAdmin) {
@@ -304,8 +321,97 @@
   DB.Session = {
     get: function () { return currentUser; },
     set: function (user) { currentUser = user; },
-    clear: function () { currentUser = null; isAdmin = false; cache.orders = []; cache.profiles = []; cache.admins = []; },
+    clear: function () { currentUser = null; isAdmin = false; cache.orders = []; cache.profiles = []; cache.admins = []; cache.cart = []; },
     isLoggedIn: function () { return !!currentUser; },
+  };
+
+  DB.Cart = {
+    get: function () { return cache.cart.slice(); },
+    count: function () { return cache.cart.reduce(function (sum, item) { return sum + item.qty; }, 0); },
+    total: function () { return cache.cart.reduce(function (sum, item) { return sum + item.price * item.qty; }, 0); },
+    add: async function (product, qty) {
+      if (!currentUser) return { success: false, message: 'يجب تسجيل الدخول أولاً.' };
+      if (!product || product.id == null) return { success: false, message: 'المنتج غير صالح.' };
+      qty = Number(qty) || 1;
+      var productId = String(product.id);
+      var existing = cache.cart.find(function (item) { return String(item.id) === productId; });
+      var row = {
+        user_id: currentUser.id,
+        product_id: productId,
+        qty: existing ? existing.qty + qty : qty,
+        name: product.name || (existing && existing.name) || '',
+        price: Number(product.price != null ? product.price : (existing && existing.price)) || 0,
+        image: product.image || (existing && existing.image) || '',
+        updated_at: new Date().toISOString(),
+      };
+      try {
+        var result = await requireClient().from('cart_items')
+          .upsert(row, { onConflict: 'user_id,product_id' })
+          .select('*').single();
+        if (result.error) return asError(result.error);
+        var item = cartItemFromRow(result.data);
+        if (existing) {
+          cache.cart = cache.cart.map(function (entry) { return String(entry.id) === productId ? item : entry; });
+        } else {
+          cache.cart.push(item);
+        }
+        return { success: true, item: item };
+      } catch (error) { return asError(error); }
+    },
+    updateQty: async function (id, qty) {
+      if (!currentUser) return { success: false, message: 'يجب تسجيل الدخول أولاً.' };
+      var productId = String(id);
+      qty = Number(qty) || 0;
+      if (qty <= 0) return this.remove(productId);
+      try {
+        var existing = cache.cart.find(function (item) { return String(item.id) === productId; });
+        var row = {
+          user_id: currentUser.id,
+          product_id: productId,
+          qty: qty,
+          name: (existing && existing.name) || '',
+          price: existing ? Number(existing.price) || 0 : 0,
+          image: (existing && existing.image) || '',
+          updated_at: new Date().toISOString(),
+        };
+        var result = await requireClient().from('cart_items')
+          .upsert(row, { onConflict: 'user_id,product_id' })
+          .select('*').single();
+        if (result.error) return asError(result.error);
+        var item = cartItemFromRow(result.data);
+        if (existing) {
+          cache.cart = cache.cart.map(function (entry) { return String(entry.id) === productId ? item : entry; });
+        } else {
+          cache.cart.push(item);
+        }
+        return { success: true, item: item };
+      } catch (error) { return asError(error); }
+    },
+    remove: async function (id) {
+      if (!currentUser) return { success: false, message: 'يجب تسجيل الدخول أولاً.' };
+      var productId = String(id);
+      try {
+        var result = await requireClient().from('cart_items')
+          .delete()
+          .eq('user_id', currentUser.id)
+          .eq('product_id', productId);
+        if (result.error) return asError(result.error);
+        cache.cart = cache.cart.filter(function (item) { return String(item.id) !== productId; });
+        return { success: true };
+      } catch (error) { return asError(error); }
+    },
+    clear: async function () {
+      if (!currentUser) {
+        cache.cart = [];
+        return { success: true };
+      }
+      try {
+        var result = await requireClient().from('cart_items').delete().eq('user_id', currentUser.id);
+        if (result.error) return asError(result.error);
+        cache.cart = [];
+        return { success: true };
+      } catch (error) { return asError(error); }
+    },
   };
 
   DB.Settings = {
@@ -324,7 +430,10 @@
 
   DB.Products = {
     getAll: function () { return cache.products.slice(); },
-    findById: function (id) { return cache.products.find(function (product) { return product.id === id; }) || null; },
+    findById: function (id) {
+      var target = String(id);
+      return cache.products.find(function (product) { return String(product.id) === target; }) || null;
+    },
     getCategories: function () { return cache.categories.slice(); },
     getByCategory: function (category) { return cache.products.filter(function (product) { return product.category === category; }); },
     search: function (query) {

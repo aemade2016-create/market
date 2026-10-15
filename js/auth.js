@@ -1,122 +1,158 @@
 // ════════════════════════════════════════════════════════════════════
-// auth.js — نظام المصادقة (LocalStorage فقط)
+// auth.js — نظام المصادقة (بدون import/export)
+// يعتمد على DB المعرَّف في db.js
 // ════════════════════════════════════════════════════════════════════
 
 var Auth = (function () {
+  function errorMessage(error) {
+    var message = error && error.message ? error.message : '';
+    if (/invalid login credentials/i.test(message)) return 'بيانات الدخول غير صحيحة. تأكد من البريد أو اسم المستخدم وكلمة المرور، أو استخدم «نسيت كلمة المرور؟».';
+    if (/email not confirmed/i.test(message)) return 'يرجى تأكيد بريدك الإلكتروني قبل تسجيل الدخول.';
+    if (/user already registered/i.test(message)) return 'هذا البريد الإلكتروني مسجّل بالفعل.';
+    if (/users_username_lower_idx|duplicate key/i.test(message)) return 'اسم المستخدم مسجّل بالفعل.';
+    return message || 'تعذر إتمام العملية. حاول مرة أخرى.';
+  }
 
-  function login(email, password) {
-    if (!email || !password)
-      return { success: false, message: 'يرجى إدخال البريد الإلكتروني وكلمة المرور.' };
-
-    var em   = email.toLowerCase().trim();
-    var isAdm = DB.Admins.isAdmin(em);
-    var user  = DB.Users.findByEmail(em);
-
-    if (isAdm) {
-      if (user && user.password !== password)
-        return { success: false, message: 'كلمة المرور غير صحيحة.' };
-
-      var sessionUser = user || {
-        id: 'admin_' + Date.now(),
-        email: em,
-        firstName: 'المدير',
-        lastName: '',
-      };
-      DB.Session.set(Object.assign({}, sessionUser, { isAdmin: true }));
-      return { success: true, user: sessionUser, isAdmin: true };
+  async function login(username, password) {
+    if (!username || !password) return { success: false, message: 'يرجى إدخال البريد الإلكتروني أو اسم المستخدم وكلمة المرور.' };
+    try {
+      var identity = username.trim().toLowerCase();
+      var email = identity;
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identity)) {
+        var lookup = await window.supabaseClient.rpc('email_for_username', {
+          requested_username: identity,
+        });
+        if (lookup.error) return { success: false, message: errorMessage(lookup.error) };
+        if (!lookup.data) return { success: false, message: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.' };
+        email = lookup.data;
+      }
+      var result = await window.supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
+      if (result.error) return { success: false, message: errorMessage(result.error) };
+      var user = await DB.syncSession({ user: result.data.user, skipRefresh: true });
+      return { success: true, user: user, isAdmin: DB.Admins.isAdmin(user.email) };
+    } catch (error) {
+      return { success: false, message: errorMessage(error) };
     }
-
-    if (!user)
-      return { success: false, message: 'البريد الإلكتروني غير مسجّل. يرجى إنشاء حساب جديد.' };
-
-    if (user.password !== password)
-      return { success: false, message: 'كلمة المرور غير صحيحة.' };
-
-    DB.Session.set(Object.assign({}, user, { isAdmin: false }));
-    return { success: true, user: user, isAdmin: false };
   }
 
-  function register(data) {
-    var f = data.firstName, l = data.lastName;
-    var e = data.email, p = data.password, c = data.confirmPassword;
-
-    if (!f || !l || !e || !p || !c)
-      return { success: false, message: 'يرجى ملء جميع الحقول المطلوبة.' };
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e))
-      return { success: false, message: 'يرجى إدخال بريد إلكتروني صحيح.' };
-
-    if (p !== c)
-      return { success: false, message: 'كلمتا المرور غير متطابقتين.' };
-
-    if (p.length < 6)
-      return { success: false, message: 'يجب أن تكون كلمة المرور 6 أحرف على الأقل.' };
-
-    var result = DB.Users.add({
-      firstName: f.trim(),
-      lastName:  l.trim(),
-      email:     e.toLowerCase().trim(),
-      password:  p,
-    });
-    if (!result.success) return result;
-
-    DB.Session.set(Object.assign({}, result.user, { isAdmin: false }));
-    return { success: true, user: result.user };
+  async function loginWithOAuth(provider) {
+    if (provider !== 'google' && provider !== 'facebook') {
+      return { success: false, message: 'مزود تسجيل الدخول غير مدعوم.' };
+    }
+    if (window.location.protocol === 'file:') {
+      return { success: false, message: 'افتح الموقع عبر localhost أو نطاق منشور لتسجيل الدخول الاجتماعي.' };
+    }
+    try {
+      var redirectTo = window.location.origin + window.location.pathname;
+      var result = await window.supabaseClient.auth.signInWithOAuth({
+        provider: provider,
+        options: { redirectTo: redirectTo },
+      });
+      if (result.error) return { success: false, message: errorMessage(result.error) };
+      return { success: true };
+    } catch (error) {
+      return { success: false, message: errorMessage(error) };
+    }
   }
 
-  function logout(redirectTo) {
+  async function register(data) {
+    var fullName = String(data.fullName || [data.firstName, data.lastName].filter(Boolean).join(' ') || '').trim();
+    var username = String(data.username || '').trim().toLowerCase();
+    var email = data.email;
+    var password = data.password;
+    var confirmPassword = data.confirmPassword;
+    if (!fullName || !username || !email || !password || !confirmPassword) return { success: false, message: 'يرجى ملء جميع الحقول المطلوبة.' };
+    if (!/^[a-z0-9_.-]{3,30}$/.test(username)) return { success: false, message: 'اسم المستخدم يجب أن يتكون من 3 إلى 30 حرفاً إنجليزياً أو رقماً أو (._-).' };
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { success: false, message: 'يرجى إدخال بريد إلكتروني صحيح.' };
+    if (password !== confirmPassword) return { success: false, message: 'كلمتا المرور غير متطابقتين.' };
+    if (password.length < 6) return { success: false, message: 'يجب أن تكون كلمة المرور 6 أحرف على الأقل.' };
+
+    try {
+      var result = await window.supabaseClient.auth.signUp({
+        email: email.toLowerCase().trim(),
+        password: password,
+        options: { data: { first_name: fullName, last_name: '', full_name: fullName, username: username } },
+      });
+      if (result.error) return { success: false, message: errorMessage(result.error) };
+      if (!result.data.session) {
+        return { success: true, requiresConfirmation: true, message: 'تم إنشاء الحساب. راجع بريدك الإلكتروني لتأكيده قبل تسجيل الدخول.' };
+      }
+      var user = await DB.syncSession({ user: result.data.user, skipRefresh: true });
+      return { success: true, user: user, requiresConfirmation: false };
+    } catch (error) {
+      return { success: false, message: errorMessage(error) };
+    }
+  }
+
+  async function logout(redirectTo) {
+    try { await window.supabaseClient.auth.signOut(); } catch (error) { console.error('[Auth] sign out failed:', error); }
+    // Keep cart rows in Supabase; only drop the in-memory session/cache.
     DB.Session.clear();
-    window.location.href = redirectTo || 'auth.html';
+    window.location.href = redirectTo || './auth.html';
   }
 
   function getCurrentUser() { return DB.Session.get(); }
-  function isLoggedIn()     { return DB.Session.isLoggedIn(); }
-
+  function isLoggedIn() { return DB.Session.isLoggedIn(); }
   function isAdmin() {
-    var u = DB.Session.get();
-    return u ? DB.Admins.isAdmin(u.email) : false;
+    var user = DB.Session.get();
+    return user ? DB.Admins.isAdmin(user.email) : false;
   }
 
   function requireAuth(redirectTo) {
-    if (!isLoggedIn()) {
-      window.location.href = redirectTo || 'auth.html';
-      return false;
-    }
+    if (!isLoggedIn()) { window.location.href = redirectTo || './auth.html'; return false; }
     return true;
   }
 
   function requireAdmin(redirectTo) {
-    if (!isLoggedIn()) { window.location.href = 'auth.html'; return false; }
-    if (!isAdmin())    { window.location.href = redirectTo || 'index.html'; return false; }
+    if (!isLoggedIn()) { window.location.href = './auth.html'; return false; }
+    if (!isAdmin()) { window.location.href = redirectTo || './index.html'; return false; }
     return true;
   }
 
-  function redirectIfLoggedIn() {
-    if (isLoggedIn())
-      window.location.href = isAdmin() ? 'admin.html' : 'index.html';
+  async function redirectIfLoggedIn() {
+    if (!isLoggedIn()) return;
+    if (window.Onboarding && !(await window.Onboarding.ensureComplete())) return;
+    window.location.href = isAdmin() ? './admin.html' : './index.html';
   }
 
-  function requestPasswordReset(email) {
-    if (!email)
-      return { success: false, message: 'يرجى إدخال البريد الإلكتروني.' };
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-      return { success: false, message: 'يرجى إدخال بريد إلكتروني صحيح.' };
-    return {
-      success: true,
-      message: 'تم إرسال رابط التحقق لتغيير كلمة المرور إلى بريدك الإلكتروني.',
-    };
+  async function requestPasswordReset(email) {
+    if (!email) return { success: false, message: 'يرجى إدخال البريد الإلكتروني.' };
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { success: false, message: 'يرجى إدخال بريد إلكتروني صحيح.' };
+    try {
+      var result = await window.supabaseClient.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: window.location.origin + window.location.pathname,
+      });
+      if (result.error) return { success: false, message: errorMessage(result.error) };
+      return { success: true, message: 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.' };
+    } catch (error) {
+      return { success: false, message: errorMessage(error) };
+    }
   }
 
-  return {
-    login: login,
-    register: register,
-    logout: logout,
-    getCurrentUser: getCurrentUser,
-    isLoggedIn: isLoggedIn,
-    isAdmin: isAdmin,
-    requireAuth: requireAuth,
-    requireAdmin: requireAdmin,
-    redirectIfLoggedIn: redirectIfLoggedIn,
-    requestPasswordReset: requestPasswordReset,
-  };
+  async function updatePassword(password) {
+    try {
+      var result = await window.supabaseClient.auth.updateUser({ password: password });
+      if (result.error) return { success: false, message: errorMessage(result.error) };
+      return { success: true };
+    } catch (error) {
+      return { success: false, message: errorMessage(error) };
+    }
+  }
+
+  async function changePassword(currentPassword, newPassword) {
+    var user = getCurrentUser();
+    if (!user) return { success: false, message: 'يجب تسجيل الدخول أولاً.' };
+    try {
+      var verified = await window.supabaseClient.auth.signInWithPassword({ email: user.email, password: currentPassword });
+      if (verified.error) return { success: false, message: 'كلمة المرور الحالية غير صحيحة.' };
+      return await updatePassword(newPassword);
+    } catch (error) {
+      return { success: false, message: errorMessage(error) };
+    }
+  }
+
+  return { login: login, loginWithOAuth: loginWithOAuth, register: register, logout: logout, getCurrentUser: getCurrentUser, isLoggedIn: isLoggedIn, isAdmin: isAdmin, requireAuth: requireAuth, requireAdmin: requireAdmin, redirectIfLoggedIn: redirectIfLoggedIn, requestPasswordReset: requestPasswordReset, updatePassword: updatePassword, changePassword: changePassword };
 })();
