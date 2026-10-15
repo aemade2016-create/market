@@ -155,8 +155,9 @@
     CartUI.initSidebar();
     CartUI.sync();
 
-    // ── Hero ──
-    document.getElementById('hero-store-name').textContent = settings.name;
+    // ── Hero — نحدّث فقط Title الصفحة واسم المتجر في الهيدر/الفوتر
+    // النص الوصفي في الـ h1 ثابت ولا نمسه
+    document.title = settings.name;
 
     var heroPhoneBtn = document.getElementById('hero-phone-btn');
     if (heroPhoneBtn && settings.phone) {
