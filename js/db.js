@@ -3,7 +3,7 @@
 // لا يستخدم import/export — يعمل كـ script عادي
 // ════════════════════════════════════════════════════════════════════
 
-const DB = (function () {
+var DB = (function () {
 
   const TABLES = {
     USERS:          'sm_users',
@@ -144,6 +144,7 @@ const DB = (function () {
   // ── Categories ───────────────────────────────────────────────────
   var Categories = {
     getAll: function() { return read(TABLES.CATEGORIES) || []; },
+    getImage: function() { return null; }, // placeholder — صور الأقسام غير مدعومة حالياً
     add: function(name) {
       var normalized = String(name || '').trim();
       var list = this.getAll();
